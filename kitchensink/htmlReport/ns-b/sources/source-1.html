@@ -1,0 +1,116 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Member</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.model</a>
+</div>
+
+<h1>Coverage Summary for Class: Member (com.quickstarts.kitchensink.model)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">Member</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.model;
+&nbsp;
+&nbsp;import lombok.*;
+&nbsp;import org.springframework.data.annotation.CreatedDate;
+&nbsp;import org.springframework.data.annotation.Id;
+&nbsp;import org.springframework.data.annotation.LastModifiedDate;
+&nbsp;import org.springframework.data.annotation.Version;
+&nbsp;import org.springframework.data.mongodb.core.index.Indexed;
+&nbsp;import org.springframework.data.mongodb.core.mapping.Document;
+&nbsp;
+&nbsp;import java.time.Instant;
+&nbsp;import java.time.LocalDate;
+&nbsp;
+&nbsp;@Document(&quot;member&quot;)
+&nbsp;@Getter
+&nbsp;@Setter
+&nbsp;@NoArgsConstructor
+&nbsp;@AllArgsConstructor
+&nbsp;@Builder
+&nbsp;public class Member {
+&nbsp;
+&nbsp;    @Id
+&nbsp;    private String id;
+&nbsp;
+&nbsp;    @Indexed
+&nbsp;    private String name;
+&nbsp;
+&nbsp;    @Indexed(unique = true)
+&nbsp;    private String email;
+&nbsp;
+&nbsp;    @Indexed(unique = true)
+&nbsp;    private String phoneNumber;
+&nbsp;
+&nbsp;    private int age;
+&nbsp;
+&nbsp;    private String place;
+&nbsp;
+&nbsp;    private LocalDate registrationDate;
+&nbsp;
+&nbsp;    @Version
+&nbsp;    private Long version;
+&nbsp;
+&nbsp;    @CreatedDate
+&nbsp;    private Instant createdAt;
+&nbsp;
+&nbsp;    @LastModifiedDate
+&nbsp;    private Instant updatedAt;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>

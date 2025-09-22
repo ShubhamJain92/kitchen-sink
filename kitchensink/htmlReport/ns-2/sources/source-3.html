@@ -1,0 +1,305 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > SecurityConfig</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.config</a>
+</div>
+
+<h1>Coverage Summary for Class: SecurityConfig (com.quickstarts.kitchensink.config)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SecurityConfig</td>
+<td class="coverageStat">
+  <span class="percent">
+    84.6%
+  </span>
+  <span class="absValue">
+    (11/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    67.6%
+  </span>
+  <span class="absValue">
+    (46/68)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">SecurityConfig$$SpringCGLIB$$0</td>
+  </tr>
+  <tr>
+    <td class="name">SecurityConfig$$SpringCGLIB$$FastClass$$0</td>
+  </tr>
+  <tr>
+    <td class="name">SecurityConfig$$SpringCGLIB$$FastClass$$1</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    84.6%
+  </span>
+  <span class="absValue">
+    (11/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    67.6%
+  </span>
+  <span class="absValue">
+    (46/68)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.config;
+&nbsp;
+&nbsp;import com.quickstarts.kitchensink.filter.JwtAuthFilter;
+&nbsp;import com.quickstarts.kitchensink.service.UserInfoUserDetailsService;
+&nbsp;import lombok.AllArgsConstructor;
+&nbsp;import org.springframework.context.annotation.Bean;
+&nbsp;import org.springframework.context.annotation.Configuration;
+&nbsp;import org.springframework.core.annotation.Order;
+&nbsp;import org.springframework.http.HttpMethod;
+&nbsp;import org.springframework.security.authentication.AuthenticationManager;
+&nbsp;import org.springframework.security.authentication.AuthenticationProvider;
+&nbsp;import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+&nbsp;import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+&nbsp;import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+&nbsp;import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+&nbsp;import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+&nbsp;import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+&nbsp;import org.springframework.security.core.userdetails.UserDetailsService;
+&nbsp;import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+&nbsp;import org.springframework.security.crypto.password.PasswordEncoder;
+&nbsp;import org.springframework.security.web.SecurityFilterChain;
+&nbsp;import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+&nbsp;
+&nbsp;import java.net.URLEncoder;
+&nbsp;
+&nbsp;import static java.nio.charset.StandardCharsets.UTF_8;
+&nbsp;import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
+&nbsp;
+&nbsp;@Configuration
+&nbsp;@EnableWebSecurity
+&nbsp;@EnableMethodSecurity
+&nbsp;@AllArgsConstructor
+&nbsp;public class SecurityConfig {
+&nbsp;
+&nbsp;    private final JwtAuthFilter authFilter;
+&nbsp;
+&nbsp;    @Bean
+&nbsp;    public UserDetailsService userDetailsService() {
+<b class="fc">&nbsp;        return new UserInfoUserDetailsService();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Bean
+&nbsp;    public PasswordEncoder passwordEncoder() {
+<b class="fc">&nbsp;        return new BCryptPasswordEncoder();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Bean
+&nbsp;    public AuthenticationProvider authenticationProvider() {
+<b class="fc">&nbsp;        final var authenticationProvider = new DaoAuthenticationProvider();</b>
+<b class="fc">&nbsp;        authenticationProvider.setUserDetailsService(userDetailsService());</b>
+<b class="fc">&nbsp;        authenticationProvider.setPasswordEncoder(passwordEncoder());</b>
+<b class="fc">&nbsp;        return authenticationProvider;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Bean
+&nbsp;    public AuthenticationManager authenticationManager(final AuthenticationConfiguration config) throws Exception {
+<b class="fc">&nbsp;        return config.getAuthenticationManager();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // === Login success handler (must-reset -&gt; redirect param -&gt; role fallback) ===
+&nbsp;    @Bean
+&nbsp;    AuthenticationSuccessHandler loginSuccessHandler() {
+<b class="fc">&nbsp;        var saved = new org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler();</b>
+<b class="fc">&nbsp;        saved.setTargetUrlParameter(&quot;redirect&quot;);</b>
+<b class="fc">&nbsp;        saved.setAlwaysUseDefaultTargetUrl(false);</b>
+<b class="fc">&nbsp;        var requestCache = new org.springframework.security.web.savedrequest.HttpSessionRequestCache();</b>
+&nbsp;
+<b class="fc">&nbsp;        return (request, response, authentication) -&gt; {</b>
+&nbsp;            // must-change password first
+<b class="nc">&nbsp;            if (authentication.getPrincipal() instanceof UserInfoUserDetails u &amp;&amp; u.mustResetPassword()) {</b>
+<b class="nc">&nbsp;                response.sendRedirect(&quot;/reset-password&quot;);</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            var roles = authentication.getAuthorities().stream()</b>
+<b class="nc">&nbsp;                    .map(org.springframework.security.core.GrantedAuthority::getAuthority)</b>
+<b class="nc">&nbsp;                    .collect(java.util.stream.Collectors.toSet());</b>
+&nbsp;
+&nbsp;            // honor ?redirect=... (admin-only for /admin/**)
+<b class="nc">&nbsp;            String redirect = request.getParameter(&quot;redirect&quot;);</b>
+<b class="nc">&nbsp;            if (redirect != null &amp;&amp; redirect.startsWith(&quot;/&quot;)</b>
+<b class="nc">&nbsp;                    &amp;&amp; (!redirect.startsWith(&quot;/admin&quot;) || roles.contains(&quot;ADMIN&quot;))) {</b>
+<b class="nc">&nbsp;                saved.onAuthenticationSuccess(request, response, authentication);</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;
+&nbsp;            // saved request (e.g., hit a protected URL first)
+<b class="nc">&nbsp;            var sr = requestCache.getRequest(request, response);</b>
+<b class="nc">&nbsp;            if (sr != null) {</b>
+<b class="nc">&nbsp;                saved.onAuthenticationSuccess(request, response, authentication);</b>
+&nbsp;                return;
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            if (roles.contains(&quot;ADMIN&quot;)) {</b>
+<b class="nc">&nbsp;                response.sendRedirect(&quot;/index.html&quot;);</b>
+<b class="nc">&nbsp;            } else if (roles.contains(&quot;MEMBER&quot;)) {</b>
+<b class="nc">&nbsp;                response.sendRedirect(&quot;/member/me&quot;);</b>
+&nbsp;            } else {
+<b class="nc">&nbsp;                response.sendRedirect(&quot;/&quot;);</b>
+&nbsp;            }
+&nbsp;        };
+&nbsp;    }
+&nbsp;
+&nbsp;    // ===== API CHAIN (JWT, stateless) =====
+&nbsp;    @Bean
+&nbsp;    @Order(1)
+&nbsp;    public SecurityFilterChain apiChain(HttpSecurity http) throws Exception {
+<b class="fc">&nbsp;        http</b>
+<b class="fc">&nbsp;                .securityMatcher(&quot;/api/**&quot;, &quot;/auth/**&quot;)</b>
+<b class="fc">&nbsp;                .csrf(AbstractHttpConfigurer::disable)</b>
+<b class="fc">&nbsp;                .sessionManagement(sm -&gt; sm.sessionCreationPolicy(STATELESS))</b>
+<b class="fc">&nbsp;                .authorizeHttpRequests(auth -&gt; auth</b>
+<b class="fc">&nbsp;                        .requestMatchers(&quot;/auth/**&quot;).permitAll()</b>
+<b class="fc">&nbsp;                        .anyRequest().authenticated()</b>
+&nbsp;                )
+&nbsp;        //        .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
+&nbsp;        ;
+<b class="fc">&nbsp;        return http.build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // ===== WEB CHAIN (form login, sessions) =====
+&nbsp;    @Bean
+&nbsp;    @Order(2)
+&nbsp;    public SecurityFilterChain webChain(HttpSecurity http) throws Exception {
+<b class="fc">&nbsp;        http // keep CSRF ON, but ignore it for exactly this bootstrap endpoint</b>
+<b class="fc">&nbsp;                .csrf(AbstractHttpConfigurer::disable)</b>
+&nbsp;                // CSRF ON by default -&gt; good for form posts
+<b class="fc">&nbsp;                .authorizeHttpRequests(auth -&gt; auth</b>
+<b class="fc">&nbsp;                        .requestMatchers(&quot;/login&quot;, &quot;/reset-password&quot;,</b>
+<b class="fc">&nbsp;                                &quot;/css/**&quot;, &quot;/js/**&quot;, &quot;/assets/**&quot;, &quot;/default-ui.css&quot;).permitAll()</b>
+<b class="fc">&nbsp;                        .requestMatchers(&quot;/login&quot;).permitAll()</b>
+<b class="fc">&nbsp;                        .requestMatchers(&quot;/auth/admin-gate&quot;).permitAll()</b>
+&nbsp;                        //.requestMatchers(&quot;/member/register&quot;).authenticated()
+<b class="fc">&nbsp;                        .requestMatchers(&quot;/reset-password&quot;, &quot;/reset-password/**&quot;).authenticated()</b>
+<b class="fc">&nbsp;                        .requestMatchers(&quot;/index.html&quot;).authenticated()</b>
+<b class="fc">&nbsp;                        .requestMatchers(HttpMethod.POST, &quot;/member/register&quot;).permitAll() // TEMP: for bootstrap only</b>
+<b class="fc">&nbsp;                        .requestMatchers(&quot;/member/me/**&quot;).hasAuthority(&quot;MEMBER&quot;)</b>
+<b class="fc">&nbsp;                        .requestMatchers(&quot;/member&quot;, &quot;/member/**&quot;, &quot;/admin/**&quot;).hasAuthority(&quot;ADMIN&quot;)</b>
+<b class="fc">&nbsp;                        .anyRequest().authenticated()</b>
+&nbsp;                )
+<b class="fc">&nbsp;                .formLogin(form -&gt; form</b>
+<b class="fc">&nbsp;                        .loginPage(&quot;/login&quot;).permitAll()  // use our template</b>
+<b class="fc">&nbsp;                        .loginProcessingUrl(&quot;/login&quot;)</b>
+<b class="fc">&nbsp;                        .successHandler(loginSuccessHandler())</b>
+&nbsp;                        //.defaultSuccessUrl(&quot;/index.html&quot;, true)
+<b class="fc">&nbsp;                        .permitAll()</b>
+&nbsp;                )
+<b class="fc">&nbsp;                .logout(l -&gt; l</b>
+<b class="fc">&nbsp;                        .logoutUrl(&quot;/logout&quot;)                // endpoint to hit</b>
+<b class="fc">&nbsp;                        .logoutSuccessUrl(&quot;/login?logout&quot;)   // redirect here after logout</b>
+<b class="fc">&nbsp;                        .invalidateHttpSession(true)</b>
+<b class="fc">&nbsp;                        .deleteCookies(&quot;JSESSIONID&quot;)</b>
+<b class="fc">&nbsp;                        .clearAuthentication(true)</b>
+&nbsp;                ) // Optional: when a logged-in non-admin hits /admin/**, send them to login to re-auth as admin
+<b class="fc">&nbsp;                .exceptionHandling(e -&gt; e.accessDeniedHandler((req, res, ex) -&gt; {</b>
+<b class="nc">&nbsp;                    String uri = req.getRequestURI();</b>
+<b class="nc">&nbsp;                    String qs = req.getQueryString();</b>
+<b class="nc">&nbsp;                    String full = uri + (qs != null ? &quot;?&quot; + qs : &quot;&quot;);</b>
+<b class="nc">&nbsp;                    String loc = &quot;/login?reauth=1&amp;redirect=&quot; + URLEncoder.encode(full, UTF_8);</b>
+<b class="nc">&nbsp;                    res.sendRedirect(loc);</b>
+&nbsp;                }));
+&nbsp;        //.sessionManagement(sm -&gt; sm.sessionCreationPolicy(ALWAYS))
+<b class="fc">&nbsp;        return http.build();</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>

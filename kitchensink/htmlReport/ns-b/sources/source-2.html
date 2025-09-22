@@ -1,0 +1,108 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MemberChangeRequest</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.model</a>
+</div>
+
+<h1>Coverage Summary for Class: MemberChangeRequest (com.quickstarts.kitchensink.model)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">MemberChangeRequest</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.model;
+&nbsp;
+&nbsp;import com.quickstarts.kitchensink.dto.enums.ChangeType;
+&nbsp;import com.quickstarts.kitchensink.dto.MemberSnapshot;
+&nbsp;import com.quickstarts.kitchensink.dto.MemberUpdateDTO;
+&nbsp;import com.quickstarts.kitchensink.dto.enums.Status;
+&nbsp;import lombok.*;
+&nbsp;import org.springframework.data.annotation.Id;
+&nbsp;import org.springframework.data.mongodb.core.mapping.Document;
+&nbsp;
+&nbsp;import java.time.Instant;
+&nbsp;
+&nbsp;import static com.quickstarts.kitchensink.dto.enums.Status.PENDING;
+&nbsp;
+&nbsp;@Document(&quot;member_change_requests&quot;)
+&nbsp;@Getter
+&nbsp;@Setter
+&nbsp;@Builder
+&nbsp;@NoArgsConstructor
+&nbsp;@AllArgsConstructor
+&nbsp;public class MemberChangeRequest {
+&nbsp;    @Id
+&nbsp;    private String id;
+&nbsp;
+&nbsp;    private String memberId;          // Member._id
+&nbsp;    private String memberEmail;       // snapshot key
+&nbsp;    private ChangeType type;          // UPDATE or DELETE
+&nbsp;    @Builder.Default
+&nbsp;    private Status status = PENDING;
+&nbsp;
+&nbsp;    private MemberSnapshot before;          // snapshot (optional but useful)
+&nbsp;    private MemberUpdateDTO memberUpdateDTO; // requested changes for UPDATE; null for DELETE
+&nbsp;
+&nbsp;    private String submittedBy;       // userName/email
+&nbsp;    private Instant submittedAt;
+&nbsp;
+&nbsp;    private String reviewedBy;        // admin
+&nbsp;    private Instant reviewedAt;
+&nbsp;    private String rejectionReason;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>

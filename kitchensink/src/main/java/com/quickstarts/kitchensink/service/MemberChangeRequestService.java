@@ -1,0 +1,111 @@
+package com.quickstarts.kitchensink.service;
+
+import com.quickstarts.kitchensink.dto.MemberSnapshot;
+import com.quickstarts.kitchensink.dto.MemberUpdateDTO;
+import com.quickstarts.kitchensink.model.Member;
+import com.quickstarts.kitchensink.model.MemberChangeRequest;
+import com.quickstarts.kitchensink.repo.MemberChangeRequestRepository;
+import com.quickstarts.kitchensink.repo.MemberRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import static com.quickstarts.kitchensink.dto.enums.ChangeType.DELETE;
+import static com.quickstarts.kitchensink.dto.enums.ChangeType.UPDATE;
+import static com.quickstarts.kitchensink.dto.enums.Status.PENDING;
+import static java.time.Instant.now;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class MemberChangeRequestService {
+
+    private final MemberRepository memberRepo;
+    private final MemberChangeRequestRepository changeRequestRepository;
+    private final EmailService emailService;
+
+    private static void updateMemberBefore(final MemberChangeRequest memberChangeRequest, final Member member) {
+        memberChangeRequest.setBefore(new MemberSnapshot(
+                member.getName(),
+                member.getEmail(),
+                member.getPhoneNumber(),
+                member.getAge(),
+                member.getPlace()
+        ));
+    }
+
+    private static MemberChangeRequest buildMemberChangeRequest(final String memberEmail,
+                                                                final MemberUpdateDTO memberUpdateDTO,
+                                                                final Member member) {
+        return MemberChangeRequest.builder()
+                .memberId(member.getId())
+                .memberEmail(member.getEmail())
+                .type(UPDATE)
+                .requested(memberUpdateDTO)
+                .submittedBy(memberEmail)
+                .submittedAt(now())
+                .build();
+    }
+
+    @Transactional
+    public void submitProfileUpdate(final String memberEmail, final MemberUpdateDTO memberUpdateDTO) {
+        final var member = getMember(memberEmail);
+
+        if (!hasAnyChange(member, memberUpdateDTO)) {
+            throw new ResponseStatusException(BAD_REQUEST, "No changes detected.");
+        }
+
+        final var memberChangeRequest = buildMemberChangeRequest(memberEmail, memberUpdateDTO, member);
+        updateMemberBefore(memberChangeRequest, member);
+        saveMemberChangeRequest(memberChangeRequest);
+        try {
+            emailService.notifyAdminUpdate(member, memberUpdateDTO);
+        } catch (Exception e) {
+            log.error("error occurred while notify submit profile update:{}", e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Transactional
+    public void submitDeleteRequest(final String userEmail) {
+        final var member = getMember(userEmail);
+
+        if (changeRequestRepository.existsByMemberIdAndStatus(member.getId(), PENDING)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A pending request already exists.");
+        }
+
+        final var memberChangeRequest = MemberChangeRequest.builder()
+                .memberId(member.getId())
+                .memberEmail(member.getEmail())
+                .type(DELETE)
+                .submittedBy(userEmail)
+                .submittedAt(now())
+                .build();
+
+        updateMemberBefore(memberChangeRequest, member);
+        saveMemberChangeRequest(memberChangeRequest);
+        emailService.notifyAdminDelete(member);
+    }
+
+    private boolean hasAnyChange(final Member member, final MemberUpdateDTO memberUpdateDTO) {
+        return (memberUpdateDTO.name() != null && !memberUpdateDTO.name().equals(member.getName())) ||
+                (memberUpdateDTO.phoneNumber() != null && !memberUpdateDTO.phoneNumber().equals(member.getPhoneNumber())) ||
+                (memberUpdateDTO.age() != 0 && memberUpdateDTO.age() != member.getAge()) ||
+                (memberUpdateDTO.place() != null && !memberUpdateDTO.place().equals(member.getPlace())) ||
+                (memberUpdateDTO.email() != null && !memberUpdateDTO.email().equalsIgnoreCase(member.getEmail()));
+    }
+
+    private void saveMemberChangeRequest(final MemberChangeRequest memberChangeRequest) {
+        changeRequestRepository.save(memberChangeRequest);
+    }
+
+    private Member getMember(final String memberEmail) {
+        return memberRepo.findByEmail(memberEmail)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Member not found"));
+    }
+}

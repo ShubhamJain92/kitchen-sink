@@ -1,0 +1,178 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AdminGateController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: AdminGateController (com.quickstarts.kitchensink.controller)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AdminGateController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    33.3%
+  </span>
+  <span class="absValue">
+    (1/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    10%
+  </span>
+  <span class="absValue">
+    (1/10)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.controller;
+&nbsp;
+&nbsp;import jakarta.servlet.http.HttpServletRequest;
+&nbsp;import jakarta.servlet.http.HttpServletResponse;
+&nbsp;import org.springframework.security.core.Authentication;
+&nbsp;import org.springframework.stereotype.Controller;
+&nbsp;import org.springframework.web.bind.annotation.GetMapping;
+&nbsp;import org.springframework.web.bind.annotation.RequestParam;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.net.URLEncoder;
+&nbsp;import java.nio.charset.StandardCharsets;
+&nbsp;
+&nbsp;@Controller
+<b class="fc">&nbsp;public class AdminGateController {</b>
+&nbsp;
+&nbsp;    private static String enc(String s) {
+<b class="nc">&nbsp;        return URLEncoder.encode(s, StandardCharsets.UTF_8);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/auth/admin-gate&quot;)
+&nbsp;    public void adminGate(@RequestParam(&quot;go&quot;) String go,
+&nbsp;                          HttpServletResponse res,
+&nbsp;                          Authentication auth) throws IOException {
+&nbsp;
+&nbsp;        // only allow app-internal targets
+<b class="nc">&nbsp;        String target = (go != null &amp;&amp; go.startsWith(&quot;/&quot;)) ? go : &quot;/admin/requests&quot;;</b>
+&nbsp;
+<b class="nc">&nbsp;        if (auth == null || !auth.isAuthenticated()) {</b>
+&nbsp;            // not logged in → go login and come back
+<b class="nc">&nbsp;            res.sendRedirect(&quot;/login?redirect=&quot; + enc(target));</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        boolean isAdmin = auth.getAuthorities().stream()</b>
+<b class="nc">&nbsp;                .anyMatch(a -&gt; &quot;ADMIN&quot;.equals(a.getAuthority()) || &quot;ROLE_ADMIN&quot;.equals(a.getAuthority()));</b>
+&nbsp;
+<b class="nc">&nbsp;        if (isAdmin) {</b>
+<b class="nc">&nbsp;            res.sendRedirect(target);</b>
+&nbsp;        } else {
+&nbsp;            // logged in but not admin → ask to sign in as admin (no forced logout)
+<b class="nc">&nbsp;            res.sendRedirect(&quot;/login?reauth=1&amp;redirect=&quot; + enc(target));</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /*@GetMapping(&quot;/admin/requests&quot;)
+&nbsp;    public String adminRequests(Authentication auth, HttpServletRequest req) {
+&nbsp;        String self = req.getRequestURI() + (req.getQueryString() != null ? &quot;?&quot; + req.getQueryString() : &quot;&quot;);
+&nbsp;        if (auth == null || !auth.isAuthenticated()) {
+&nbsp;            // not logged in → login then come back
+&nbsp;            return &quot;redirect:/login?redirect=&quot; + URLEncoder.encode(self, StandardCharsets.UTF_8);
+&nbsp;        }
+&nbsp;        boolean isAdmin = auth.getAuthorities().stream()
+&nbsp;                .anyMatch(a -&gt; &quot;ADMIN&quot;.equals(a.getAuthority()) || &quot;ROLE_ADMIN&quot;.equals(a.getAuthority()));
+&nbsp;        if (!isAdmin) {
+&nbsp;            // logged in but not admin → re-auth as admin
+&nbsp;            return &quot;redirect:/login?reauth=1&amp;redirect=&quot; + URLEncoder.encode(self, StandardCharsets.UTF_8);
+&nbsp;        }
+&nbsp;        // logged in as admin → show your admin console (or route to your SPA)
+&nbsp;        return &quot;redirect:/index.html&quot;; // or return &quot;admin-requests&quot; if you add a Thymeleaf page
+&nbsp;    }*/
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>

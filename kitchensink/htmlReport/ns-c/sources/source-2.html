@@ -1,0 +1,89 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > UserInfoRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.repo</a>
+</div>
+
+<h1>Coverage Summary for Class: UserInfoRepository (com.quickstarts.kitchensink.repo)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">UserInfoRepository$MockitoMock$Fv3YAUfH</td>
+  </tr>
+  <tr>
+    <td class="name">UserInfoRepository$MockitoMock$Fv3YAUfH$auxiliary$8ZW6QqzQ</td>
+  </tr>
+  <tr>
+    <td class="name">UserInfoRepository$MockitoMock$Fv3YAUfH$auxiliary$rUgcZ4dE</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.repo;
+&nbsp;
+&nbsp;import com.quickstarts.kitchensink.model.UserInfo;
+&nbsp;import org.springframework.data.mongodb.repository.MongoRepository;
+&nbsp;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;public interface UserInfoRepository extends MongoRepository&lt;UserInfo, String&gt; {
+&nbsp;    Optional&lt;UserInfo&gt; findByUserName(String username);
+&nbsp;
+&nbsp;    Optional&lt;UserInfo&gt; findByMemberId(String memberId);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>

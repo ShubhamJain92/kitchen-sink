@@ -1,0 +1,220 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > GlobalExceptionHandler</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.exception</a>
+</div>
+
+<h1>Coverage Summary for Class: GlobalExceptionHandler (com.quickstarts.kitchensink.exception)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">GlobalExceptionHandler</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    11.1%
+  </span>
+  <span class="absValue">
+    (1/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    2.2%
+  </span>
+  <span class="absValue">
+    (1/46)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.exception;
+&nbsp;
+&nbsp;
+&nbsp;import jakarta.servlet.http.HttpServletRequest;
+&nbsp;import org.springframework.dao.DuplicateKeyException;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ProblemDetail;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.MethodArgumentNotValidException;
+&nbsp;import org.springframework.web.bind.annotation.ExceptionHandler;
+&nbsp;import org.springframework.web.bind.annotation.RestControllerAdvice;
+&nbsp;import org.springframework.web.context.request.ServletWebRequest;
+&nbsp;import org.springframework.web.server.ResponseStatusException;
+&nbsp;
+&nbsp;import java.time.Instant;
+&nbsp;import java.util.Map;
+&nbsp;
+&nbsp;@RestControllerAdvice
+<b class="fc">&nbsp;public class GlobalExceptionHandler {</b>
+&nbsp;
+&nbsp;    @ExceptionHandler(MethodArgumentNotValidException.class)
+&nbsp;    ResponseEntity&lt;Map&lt;String,Object&gt;&gt; handleBeanValidation(MethodArgumentNotValidException ex,
+&nbsp;                                                       HttpServletRequest req) {
+<b class="nc">&nbsp;        Map&lt;String, String&gt; errors = ex.getBindingResult().getFieldErrors().stream()</b>
+<b class="nc">&nbsp;                .collect(java.util.stream.Collectors.toMap(</b>
+&nbsp;                        org.springframework.validation.FieldError::getField,
+<b class="nc">&nbsp;                        fe -&gt; java.util.Optional.ofNullable(fe.getDefaultMessage()).orElse(&quot;Invalid value&quot;),</b>
+<b class="nc">&nbsp;                        (a, b) -&gt; a, // keep first message if duplicates</b>
+&nbsp;                        java.util.LinkedHashMap::new
+&nbsp;                ));
+&nbsp;
+<b class="nc">&nbsp;        var body = new java.util.LinkedHashMap&lt;String,Object&gt;();</b>
+<b class="nc">&nbsp;        body.put(&quot;type&quot;, &quot;about:blank&quot;);</b>
+<b class="nc">&nbsp;        body.put(&quot;title&quot;, &quot;Validation failed&quot;);</b>
+<b class="nc">&nbsp;        body.put(&quot;status&quot;, 400);</b>
+<b class="nc">&nbsp;        body.put(&quot;detail&quot;, &quot;One or more fields are invalid.&quot;);</b>
+<b class="nc">&nbsp;        body.put(&quot;instance&quot;, req.getRequestURI());</b>
+<b class="nc">&nbsp;        body.put(&quot;timestamp&quot;, java.time.Instant.now());</b>
+<b class="nc">&nbsp;        body.put(&quot;errors&quot;, errors);</b>
+<b class="nc">&nbsp;        return ResponseEntity.badRequest().body(body);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @ExceptionHandler(MemberNotFoundException.class)
+&nbsp;    ResponseEntity&lt;ProblemDetail&gt; handleNotFound(MemberNotFoundException ex,
+&nbsp;                                                 ServletWebRequest req) {
+<b class="nc">&nbsp;        var pd = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);</b>
+<b class="nc">&nbsp;        pd.setTitle(&quot;Not Found&quot;);</b>
+<b class="nc">&nbsp;        pd.setDetail(ex.getMessage());</b>
+<b class="nc">&nbsp;        pd.setProperty(&quot;timestamp&quot;, Instant.now());</b>
+<b class="nc">&nbsp;        pd.setProperty(&quot;path&quot;, req.getRequest().getRequestURI());</b>
+<b class="nc">&nbsp;        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(pd);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @ExceptionHandler(DuplicateEmailException.class)
+&nbsp;    ResponseEntity&lt;ProblemDetail&gt; handleDuplicateEmail(DuplicateEmailException ex,
+&nbsp;                                                       ServletWebRequest req) {
+<b class="nc">&nbsp;        var pd = ProblemDetail.forStatus(HttpStatus.CONFLICT);</b>
+<b class="nc">&nbsp;        pd.setTitle(&quot;Duplicate email&quot;);</b>
+<b class="nc">&nbsp;        pd.setDetail(&quot;Email already registered.&quot;);</b>
+<b class="nc">&nbsp;        pd.setProperty(&quot;timestamp&quot;, Instant.now());</b>
+<b class="nc">&nbsp;        pd.setProperty(&quot;path&quot;, req.getRequest().getRequestURI());</b>
+<b class="nc">&nbsp;        pd.setProperty(&quot;errors&quot;, Map.of(&quot;email&quot;, &quot;Email taken&quot;));</b>
+<b class="nc">&nbsp;        return ResponseEntity.status(HttpStatus.CONFLICT).body(pd);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Safety net for races: unique index violation from Mongo.
+&nbsp;     * Translate to same response as DuplicateEmailException.
+&nbsp;     */
+&nbsp;    @ExceptionHandler(DuplicateKeyException.class)
+&nbsp;    ResponseEntity&lt;ProblemDetail&gt; handleMongoDuplicate(DuplicateKeyException ex,
+&nbsp;                                                       ServletWebRequest req) {
+<b class="nc">&nbsp;        var pd = ProblemDetail.forStatus(HttpStatus.CONFLICT);</b>
+<b class="nc">&nbsp;        pd.setTitle(&quot;Duplicate key&quot;);</b>
+<b class="nc">&nbsp;        pd.setDetail(&quot;A unique constraint was violated.&quot;);</b>
+<b class="nc">&nbsp;        pd.setProperty(&quot;timestamp&quot;, Instant.now());</b>
+<b class="nc">&nbsp;        pd.setProperty(&quot;path&quot;, req.getRequest().getRequestURI());</b>
+&nbsp;        // Best-effort field hint
+<b class="nc">&nbsp;        pd.setProperty(&quot;errors&quot;, Map.of(&quot;email&quot;, &quot;Email taken&quot;));</b>
+<b class="nc">&nbsp;        return ResponseEntity.status(HttpStatus.CONFLICT).body(pd);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @ExceptionHandler(ResponseStatusException.class)
+&nbsp;    ResponseEntity&lt;ProblemDetail&gt; handleRSE(ResponseStatusException ex,
+&nbsp;                                            ServletWebRequest req) {
+<b class="nc">&nbsp;        var pd = ProblemDetail.forStatus(ex.getStatusCode());</b>
+<b class="nc">&nbsp;        pd.setTitle(ex.getReason() != null ? ex.getReason() : &quot;Error&quot;);</b>
+<b class="nc">&nbsp;        pd.setDetail(ex.getMessage());</b>
+<b class="nc">&nbsp;        pd.setProperty(&quot;timestamp&quot;, Instant.now());</b>
+<b class="nc">&nbsp;        pd.setProperty(&quot;path&quot;, req.getRequest().getRequestURI());</b>
+<b class="nc">&nbsp;        return ResponseEntity.status(ex.getStatusCode()).body(pd);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @ExceptionHandler(Exception.class)
+&nbsp;    ResponseEntity&lt;ProblemDetail&gt; handleGeneric(Exception ex, ServletWebRequest req) {
+<b class="nc">&nbsp;        var pd = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);</b>
+<b class="nc">&nbsp;        pd.setTitle(&quot;Internal error&quot;);</b>
+<b class="nc">&nbsp;        pd.setDetail(&quot;Something went wrong.&quot;);</b>
+<b class="nc">&nbsp;        pd.setProperty(&quot;timestamp&quot;, Instant.now());</b>
+<b class="nc">&nbsp;        pd.setProperty(&quot;path&quot;, req.getRequest().getRequestURI());</b>
+<b class="nc">&nbsp;        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(pd);</b>
+&nbsp;    }
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>

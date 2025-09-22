@@ -1,0 +1,287 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MemberExportService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.service</a>
+</div>
+
+<h1>Coverage Summary for Class: MemberExportService (com.quickstarts.kitchensink.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MemberExportService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    65.8%
+  </span>
+  <span class="absValue">
+    (25/38)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    82.4%
+  </span>
+  <span class="absValue">
+    (70/85)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.service;
+&nbsp;
+&nbsp;import com.quickstarts.kitchensink.dto.MemberFilterRequest;
+&nbsp;import com.quickstarts.kitchensink.model.Member;
+&nbsp;import jakarta.servlet.http.HttpServletResponse;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import org.apache.poi.xssf.streaming.SXSSFSheet;
+&nbsp;import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+&nbsp;import org.springframework.data.domain.Sort;
+&nbsp;import org.springframework.data.mongodb.core.MongoTemplate;
+&nbsp;import org.springframework.data.mongodb.core.query.Criteria;
+&nbsp;import org.springframework.data.mongodb.core.query.Query;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;import java.io.*;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;import java.util.regex.Pattern;
+&nbsp;import java.util.stream.Stream;
+&nbsp;
+&nbsp;import static com.quickstarts.kitchensink.constants.Constants.EXPORT_EXCEL_SHEET_CONTENT_TYPE;
+&nbsp;import static com.quickstarts.kitchensink.utils.MemberUtils.*;
+&nbsp;import static java.nio.charset.StandardCharsets.UTF_8;
+&nbsp;import static java.time.LocalDate.now;
+&nbsp;import static java.util.Set.of;
+&nbsp;import static org.springframework.data.domain.Sort.Direction.ASC;
+&nbsp;import static org.springframework.data.domain.Sort.Direction.DESC;
+&nbsp;
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class MemberExportService {
+&nbsp;
+&nbsp;    private final MongoTemplate mongoTemplate;
+&nbsp;
+&nbsp;    /* ---------------- CSV ---------------- */
+&nbsp;    public void exportCsv(final MemberFilterRequest filterRequest, final HttpServletResponse response) throws IOException {
+<b class="fc">&nbsp;        final var query = buildQueryForExport(filterRequest);</b>
+<b class="fc">&nbsp;        final var filename = &quot;members-&quot; + now() + &quot;.csv&quot;;</b>
+<b class="fc">&nbsp;        response.setCharacterEncoding(UTF_8.name());</b>
+<b class="fc">&nbsp;        response.setContentType(&quot;text/csv; charset=UTF-8&quot;);</b>
+<b class="fc">&nbsp;        response.setHeader(&quot;Content-Disposition&quot;, &quot;attachment; filename=\&quot;&quot; + filename + &quot;\&quot;&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        try (var out = response.getOutputStream();</b>
+<b class="fc">&nbsp;             var w = new BufferedWriter(new OutputStreamWriter(out, UTF_8));</b>
+<b class="fc">&nbsp;             Stream&lt;Member&gt; stream = mongoTemplate.stream(query, Member.class)) {</b>
+&nbsp;
+&nbsp;            // header
+<b class="fc">&nbsp;            w.write(&quot;Registration Date,Name,Email,Phone,Age,Place\n&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;            stream.forEachOrdered(m -&gt; {</b>
+&nbsp;                try {
+<b class="fc">&nbsp;                    writeCsvRow(w, m);</b>
+&nbsp;                } catch (java.io.IOException e) {
+<b class="nc">&nbsp;                    throw new UncheckedIOException(e);</b>
+&nbsp;                }
+&nbsp;            });
+&nbsp;        } catch (UncheckedIOException e) {
+&nbsp;            // unwrap and rethrow as IO so container handles it cleanly
+<b class="nc">&nbsp;            throw e.getCause();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    /* ---------------- Query builder (no pagination) ---------------- */
+&nbsp;
+&nbsp;    private void writeCsvRow(final Writer writer, final Member member) throws IOException {
+<b class="fc">&nbsp;        final var cols = new String[]{</b>
+<b class="fc">&nbsp;                formatDate(member.getRegistrationDate()),</b>
+<b class="fc">&nbsp;                emptyIfNull(member.getName()),</b>
+<b class="fc">&nbsp;                emptyIfNull(member.getEmail()),</b>
+<b class="fc">&nbsp;                emptyIfNull(member.getPhoneNumber()),</b>
+<b class="fc">&nbsp;                (member.getAge() == 0 ? &quot;&quot; : String.valueOf(member.getAge())),</b>
+<b class="fc">&nbsp;                emptyIfNull(member.getPlace())</b>
+&nbsp;        };
+<b class="fc">&nbsp;        for (int i = 0; i &lt; cols.length; i++) {</b>
+<b class="fc">&nbsp;            String v = cols[i].replace(&quot;\&quot;&quot;, &quot;\&quot;\&quot;&quot;);</b>
+<b class="fc">&nbsp;            writer.write(&#39;&quot;&#39;);</b>
+<b class="fc">&nbsp;            writer.write(v);</b>
+<b class="fc">&nbsp;            writer.write(&#39;&quot;&#39;);</b>
+<b class="fc">&nbsp;            if (i &lt; cols.length - 1) writer.write(&#39;,&#39;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        writer.write(&#39;\n&#39;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void exportXlsx(final MemberFilterRequest filterRequest, final HttpServletResponse httpServletResponse) throws IOException {
+<b class="fc">&nbsp;        final var query = buildQueryForExport(filterRequest);</b>
+<b class="fc">&nbsp;        final var filename = &quot;members-&quot; + now() + &quot;.xlsx&quot;;</b>
+<b class="fc">&nbsp;        httpServletResponse.setContentType(EXPORT_EXCEL_SHEET_CONTENT_TYPE);</b>
+<b class="fc">&nbsp;        httpServletResponse.setHeader(&quot;Content-Disposition&quot;, &quot;attachment; filename=\&quot;&quot; + filename + &quot;\&quot;&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        try (SXSSFWorkbook workbook = new SXSSFWorkbook(200)) {</b>
+<b class="fc">&nbsp;            SXSSFSheet workbookSheet = workbook.createSheet(&quot;Members&quot;);</b>
+<b class="fc">&nbsp;            workbookSheet.trackAllColumnsForAutoSizing();</b>
+&nbsp;
+<b class="fc">&nbsp;            int r = 0;</b>
+<b class="fc">&nbsp;            String[] heads = {&quot;Registration Date&quot;, &quot;Name&quot;, &quot;Email&quot;, &quot;Phone&quot;, &quot;Age&quot;, &quot;Place&quot;};</b>
+&nbsp;
+<b class="fc">&nbsp;            var header = workbookSheet.createRow(r++);</b>
+<b class="fc">&nbsp;            for (int c = 0; c &lt; heads.length; c++) header.createCell(c).setCellValue(heads[c]);</b>
+&nbsp;
+<b class="fc">&nbsp;            try (Stream&lt;Member&gt; stream = mongoTemplate.stream(query, Member.class)) {</b>
+<b class="fc">&nbsp;                final int[] rowIdx = {r};</b>
+<b class="fc">&nbsp;                stream.forEachOrdered(m -&gt; {</b>
+<b class="fc">&nbsp;                    var row = workbookSheet.createRow(rowIdx[0]++);</b>
+<b class="fc">&nbsp;                    int c = 0;</b>
+<b class="fc">&nbsp;                    row.createCell(c++).setCellValue(formatDate(m.getRegistrationDate()));</b>
+<b class="fc">&nbsp;                    row.createCell(c++).setCellValue(emptyIfNull(m.getName()));</b>
+<b class="fc">&nbsp;                    row.createCell(c++).setCellValue(emptyIfNull(m.getEmail()));</b>
+<b class="fc">&nbsp;                    row.createCell(c++).setCellValue(emptyIfNull(m.getPhoneNumber()));</b>
+<b class="fc">&nbsp;                    row.createCell(c++).setCellValue(m.getAge()); // numeric is fine</b>
+<b class="fc">&nbsp;                    row.createCell(c++).setCellValue(emptyIfNull(m.getPlace()));</b>
+&nbsp;                });
+&nbsp;            }
+&nbsp;
+&nbsp;            // Now it&#39;s legal to auto-size tracked columns
+<b class="fc">&nbsp;            for (int c = 0; c &lt; heads.length; c++) workbookSheet.autoSizeColumn(c);</b>
+&nbsp;
+<b class="fc">&nbsp;            try (var os = httpServletResponse.getOutputStream()) {</b>
+<b class="fc">&nbsp;                workbook.write(os);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            workbook.dispose(); // cleanup temp files</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private Query buildQueryForExport(final MemberFilterRequest filterRequest) {
+&nbsp;        // sort whitelist
+<b class="fc">&nbsp;        var allowed = of(&quot;name&quot;, &quot;email&quot;, &quot;phoneNumber&quot;, &quot;age&quot;, &quot;place&quot;, &quot;registrationDate&quot;);</b>
+<b class="pc">&nbsp;        var sortFields = (filterRequest.getSortBy() == null || filterRequest.getSortBy().isEmpty() ? List.of(&quot;registrationDate&quot;) : filterRequest.getSortBy())</b>
+<b class="fc">&nbsp;                .stream().filter(allowed::contains).toList();</b>
+<b class="fc">&nbsp;        var dir = &quot;desc&quot;.equalsIgnoreCase(filterRequest.getDir()) ? DESC : ASC;</b>
+<b class="fc">&nbsp;        var sort = Sort.by(sortFields.stream().map(fn -&gt; new Sort.Order(dir, fn)).toList());</b>
+&nbsp;
+<b class="fc">&nbsp;        var q = new Query().with(sort);</b>
+<b class="fc">&nbsp;        var ands = new ArrayList&lt;Criteria&gt;();</b>
+&nbsp;
+&nbsp;        // q over text fields (name/email/phone/place); registrationDate is LocalDate so skip here
+<b class="pc">&nbsp;        if (hasText(filterRequest.getQ())) {</b>
+<b class="nc">&nbsp;            String rx = Pattern.quote(filterRequest.getQ().trim());</b>
+<b class="nc">&nbsp;            ands.add(new Criteria().orOperator(</b>
+<b class="nc">&nbsp;                    Criteria.where(&quot;name&quot;).regex(rx, &quot;i&quot;),</b>
+<b class="nc">&nbsp;                    Criteria.where(&quot;email&quot;).regex(rx, &quot;i&quot;),</b>
+<b class="nc">&nbsp;                    Criteria.where(&quot;phoneNumber&quot;).regex(rx, &quot;i&quot;),</b>
+<b class="nc">&nbsp;                    Criteria.where(&quot;place&quot;).regex(rx, &quot;i&quot;)</b>
+&nbsp;            ));
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (hasText(filterRequest.getName()))</b>
+<b class="nc">&nbsp;            ands.add(Criteria.where(&quot;name&quot;).regex(Pattern.quote(filterRequest.getName().trim()), &quot;i&quot;));</b>
+<b class="pc">&nbsp;        if (hasText(filterRequest.getEmail()))</b>
+<b class="nc">&nbsp;            ands.add(Criteria.where(&quot;email&quot;).regex(Pattern.quote(filterRequest.getEmail().trim()), &quot;i&quot;));</b>
+<b class="pc">&nbsp;        if (hasText(filterRequest.getPhoneNumber()))</b>
+<b class="nc">&nbsp;            ands.add(Criteria.where(&quot;phoneNumber&quot;).regex(Pattern.quote(filterRequest.getPhoneNumber().trim()), &quot;i&quot;));</b>
+<b class="pc">&nbsp;        if (hasText(filterRequest.getPlace()))</b>
+<b class="nc">&nbsp;            ands.add(Criteria.where(&quot;place&quot;).regex(Pattern.quote(filterRequest.getPlace().trim()), &quot;i&quot;));</b>
+<b class="pc">&nbsp;        if (filterRequest.getAgeMin() != 0) ands.add(Criteria.where(&quot;age&quot;).gte(filterRequest.getAgeMin()));</b>
+<b class="pc">&nbsp;        if (filterRequest.getAgeMax() != 0) ands.add(Criteria.where(&quot;age&quot;).lte(filterRequest.getAgeMax()));</b>
+&nbsp;
+&nbsp;        // LocalDate filters: exact / from / to
+<b class="pc">&nbsp;        if (filterRequest.getRegistrationDate() != null) {</b>
+<b class="nc">&nbsp;            ands.add(Criteria.where(&quot;registrationDate&quot;).is(filterRequest.getRegistrationDate()));</b>
+&nbsp;        } else {
+<b class="pc">&nbsp;            if (filterRequest.getRegistrationDateFrom() != null)</b>
+<b class="nc">&nbsp;                ands.add(Criteria.where(&quot;registrationDate&quot;).gte(filterRequest.getRegistrationDateFrom()));</b>
+<b class="pc">&nbsp;            if (filterRequest.getRegistrationDateTo() != null)</b>
+<b class="nc">&nbsp;                ands.add(Criteria.where(&quot;registrationDate&quot;).lte(filterRequest.getRegistrationDateTo()));</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (!ands.isEmpty()) q.addCriteria(new Criteria().andOperator(ands.toArray(Criteria[]::new)));</b>
+<b class="fc">&nbsp;        return q;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>

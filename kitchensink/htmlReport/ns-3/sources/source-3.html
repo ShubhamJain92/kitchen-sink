@@ -1,0 +1,166 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AuthController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: AuthController (com.quickstarts.kitchensink.controller)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AuthController</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/9)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.controller;
+&nbsp;
+&nbsp;import com.quickstarts.kitchensink.config.UserInfoUserDetails;
+&nbsp;import com.quickstarts.kitchensink.dto.AuthRequest;
+&nbsp;import com.quickstarts.kitchensink.service.JwtService;
+&nbsp;import com.quickstarts.kitchensink.service.UserService;
+&nbsp;import lombok.AllArgsConstructor;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.security.authentication.AuthenticationManager;
+&nbsp;import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+&nbsp;import org.springframework.security.core.Authentication;
+&nbsp;import org.springframework.security.core.annotation.AuthenticationPrincipal;
+&nbsp;import org.springframework.security.core.userdetails.UsernameNotFoundException;
+&nbsp;import org.springframework.web.bind.annotation.PostMapping;
+&nbsp;import org.springframework.web.bind.annotation.RequestBody;
+&nbsp;import org.springframework.web.bind.annotation.RequestParam;
+&nbsp;import org.springframework.web.bind.annotation.RestController;
+&nbsp;import org.springframework.web.server.ResponseStatusException;
+&nbsp;import org.springframework.web.servlet.view.RedirectView;
+&nbsp;
+&nbsp;@RestController
+&nbsp;@AllArgsConstructor
+&nbsp;public class AuthController {
+&nbsp;
+&nbsp;    private final JwtService jwtService;
+&nbsp;    private final AuthenticationManager authenticationManager;
+&nbsp;    private final UserService userService;
+&nbsp;
+&nbsp;    @PostMapping(&quot;/authenticate&quot;)
+&nbsp;    public String authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
+<b class="nc">&nbsp;        Authentication authentication = authenticationManager.authenticate(</b>
+<b class="nc">&nbsp;                new UsernamePasswordAuthenticationToken(authRequest.username(), authRequest.password()));</b>
+<b class="nc">&nbsp;        if (authentication.isAuthenticated()) {</b>
+<b class="nc">&nbsp;            return jwtService.generateToken(authRequest.username());</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            throw new UsernameNotFoundException(&quot;invalid user request !&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/reset-password&quot;)
+&nbsp;    public RedirectView doReset(@AuthenticationPrincipal final UserInfoUserDetails me,
+&nbsp;                          @RequestParam final String newPassword,
+&nbsp;                          @RequestParam String confirmPassword) {
+<b class="nc">&nbsp;        if (!newPassword.equals(confirmPassword)) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Passwords do not match&quot;);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        userService.resetPassword(me.getUsername(), newPassword);</b>
+<b class="nc">&nbsp;        return new RedirectView(&quot;/login?pwdReset=1&quot;);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>

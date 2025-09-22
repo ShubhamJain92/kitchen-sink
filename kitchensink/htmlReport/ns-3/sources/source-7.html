@@ -1,0 +1,158 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MemberSelfController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: MemberSelfController (com.quickstarts.kitchensink.controller)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MemberSelfController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (10/10)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.controller;
+&nbsp;
+&nbsp;import com.quickstarts.kitchensink.config.UserInfoUserDetails;
+&nbsp;import com.quickstarts.kitchensink.dto.MemberUpdateDTO;
+&nbsp;import com.quickstarts.kitchensink.repo.MemberRepository;
+&nbsp;import com.quickstarts.kitchensink.service.MemberChangeRequestService;
+&nbsp;import jakarta.validation.Valid;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.security.core.annotation.AuthenticationPrincipal;
+&nbsp;import org.springframework.stereotype.Controller;
+&nbsp;import org.springframework.ui.Model;
+&nbsp;import org.springframework.web.bind.annotation.GetMapping;
+&nbsp;import org.springframework.web.bind.annotation.ModelAttribute;
+&nbsp;import org.springframework.web.bind.annotation.PostMapping;
+&nbsp;import org.springframework.web.bind.annotation.RequestMapping;
+&nbsp;import org.springframework.web.server.ResponseStatusException;
+&nbsp;import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+&nbsp;
+&nbsp;// Self-service endpoints for the logged-in member
+&nbsp;@Controller
+&nbsp;@RequiredArgsConstructor
+&nbsp;@RequestMapping(&quot;/member/me&quot;)
+&nbsp;public class MemberSelfController {
+&nbsp;    private final MemberRepository memberRepo;
+&nbsp;    private final MemberChangeRequestService changeService;
+&nbsp;
+&nbsp;    // 1) View my details (server-rendered page)
+&nbsp;    @GetMapping
+&nbsp;    public String viewMe(@AuthenticationPrincipal UserInfoUserDetails me, Model model) {
+<b class="fc">&nbsp;        var member = memberRepo.findByEmail(me.getUsername())</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Member not found&quot;));</b>
+<b class="fc">&nbsp;        model.addAttribute(&quot;member&quot;, member);</b>
+<b class="fc">&nbsp;        return &quot;member-self&quot;; // templates/member-self.html</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // 2) Update my details -&gt; creates a PENDING change request and emails admin
+&nbsp;    @PostMapping // (or PUT; using POST for form submits)
+&nbsp;    public String updateMe(@AuthenticationPrincipal final UserInfoUserDetails me,
+&nbsp;                           @Valid @ModelAttribute final MemberUpdateDTO dto,
+&nbsp;                           final RedirectAttributes ra) {
+<b class="fc">&nbsp;        changeService.submitProfileUpdate(me.getUsername(), dto);</b>
+<b class="fc">&nbsp;        ra.addFlashAttribute(&quot;msg&quot;, &quot;Your changes were submitted and are pending admin approval.&quot;);</b>
+<b class="fc">&nbsp;        return &quot;redirect:/member/me&quot;;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // 3) Delete myself -&gt; creates a PENDING delete request and emails admin
+&nbsp;    @PostMapping(&quot;/delete&quot;)
+&nbsp;    public String deleteMe(@AuthenticationPrincipal UserInfoUserDetails me, RedirectAttributes ra) {
+<b class="fc">&nbsp;        changeService.submitDeleteRequest(me.getUsername());</b>
+<b class="fc">&nbsp;        ra.addFlashAttribute(&quot;msg&quot;, &quot;Your delete request was sent to the admin for approval.&quot;);</b>
+<b class="fc">&nbsp;        return &quot;redirect:/member/me&quot;;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,259 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MemberService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.service</a>
+</div>
+
+<h1>Coverage Summary for Class: MemberService (com.quickstarts.kitchensink.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MemberService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (9/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (9/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    93.9%
+  </span>
+  <span class="absValue">
+    (46/49)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.service;
+&nbsp;
+&nbsp;import com.mongodb.DuplicateKeyException;
+&nbsp;import com.quickstarts.kitchensink.dto.CreateMemberRequestDTO;
+&nbsp;import com.quickstarts.kitchensink.dto.MemberResponseDTO;
+&nbsp;import com.quickstarts.kitchensink.dto.UpdateMemberRequest;
+&nbsp;import com.quickstarts.kitchensink.exception.ConflictException;
+&nbsp;import com.quickstarts.kitchensink.exception.NotFoundException;
+&nbsp;import com.quickstarts.kitchensink.model.Member;
+&nbsp;import com.quickstarts.kitchensink.model.UserInfo;
+&nbsp;import com.quickstarts.kitchensink.repo.MemberRepository;
+&nbsp;import com.quickstarts.kitchensink.repo.UserInfoRepository;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import org.springframework.beans.factory.annotation.Value;
+&nbsp;import org.springframework.security.crypto.password.PasswordEncoder;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;
+&nbsp;import java.util.Set;
+&nbsp;
+&nbsp;import static com.quickstarts.kitchensink.dto.CreateMemberRequestDTO.to;
+&nbsp;import static com.quickstarts.kitchensink.dto.enums.Role.MEMBER;
+&nbsp;import static com.quickstarts.kitchensink.utils.MemberUtils.generateTempPassword;
+&nbsp;import static com.quickstarts.kitchensink.utils.MemberUtils.toProperCase;
+&nbsp;import static java.util.Optional.ofNullable;
+&nbsp;
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class MemberService {
+&nbsp;
+&nbsp;    private final MemberRepository memberRepository;
+&nbsp;    private final EmailService emailService;
+&nbsp;    private final UserInfoRepository userInfoRepository;
+&nbsp;    private final PasswordEncoder encoder;
+&nbsp;
+&nbsp;    @Value(&quot;${app.login.url:http://localhost:8080/login}&quot;)
+&nbsp;    private String loginUrl;
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public Member registerMember(final CreateMemberRequestDTO createMemberRequestDTO) {
+<b class="fc">&nbsp;        final var member = to(createMemberRequestDTO);</b>
+<b class="fc">&nbsp;        final var savedMember = memberRepository.save(member);</b>
+<b class="fc">&nbsp;        final var tempPwd = generateTempPassword();</b>
+<b class="fc">&nbsp;        final var user = buildUserForNewMember(createMemberRequestDTO, tempPwd, savedMember);</b>
+<b class="fc">&nbsp;        userInfoRepository.save(user);</b>
+&nbsp;
+<b class="fc">&nbsp;        notifyMemberWithWelcomeEmail(createMemberRequestDTO, tempPwd);</b>
+<b class="fc">&nbsp;        return savedMember;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public MemberResponseDTO update(final String memberId, final UpdateMemberRequest updateMemberRequest) {
+<b class="fc">&nbsp;        final var member = getMemberInfo(memberId);</b>
+<b class="fc">&nbsp;        final var name = toProperCase(updateMemberRequest.name().trim().replaceAll(&quot;\\s+&quot;, &quot; &quot;));</b>
+<b class="fc">&nbsp;        final var email = updateMemberRequest.email().trim().toLowerCase();</b>
+<b class="fc">&nbsp;        final var phoneNumber = updateMemberRequest.phoneNumber();</b>
+<b class="fc">&nbsp;        validateUpdateRequest(memberId, email, phoneNumber);</b>
+<b class="fc">&nbsp;        final var memberToUpdate = getUpdatedMember(updateMemberRequest, member, name, email, phoneNumber);</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            final var responseDTO = MemberResponseDTO.from(memberRepository.save(memberToUpdate));</b>
+&nbsp;            //notify members that their details are updated
+<b class="fc">&nbsp;            emailService.notifyMemberUpdated();</b>
+<b class="fc">&nbsp;            return responseDTO;</b>
+&nbsp;        } catch (final DuplicateKeyException dk) {
+<b class="fc">&nbsp;            final var msg = ofNullable(dk.getMessage()).orElse(&quot;&quot;);</b>
+<b class="pc">&nbsp;            if (msg.contains(&quot;email&quot;)) {</b>
+<b class="nc">&nbsp;                throw new ConflictException(&quot;Email already in use&quot;);</b>
+&nbsp;            }
+<b class="pc">&nbsp;            if (msg.contains(&quot;phoneNumber&quot;)) {</b>
+<b class="nc">&nbsp;                throw new ConflictException(&quot;Phone already in use&quot;);</b>
+&nbsp;            }
+<b class="pc">&nbsp;            if (msg.contains(&quot;index: _id_&quot;)) {</b>
+<b class="nc">&nbsp;                throw new ConflictException(&quot;Duplicate memberId; update attempted as insert&quot;);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            throw new ConflictException(&quot;A unique constraint was violated&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    public void delete(final String id) {
+<b class="fc">&nbsp;        deleteUserByMemberId(id);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (!memberRepository.existsById(id)) {</b>
+<b class="fc">&nbsp;            throw new NotFoundException(&quot;Member not found&quot;);</b>
+&nbsp;        }
+&nbsp;        //notify members that their account is deleted
+<b class="fc">&nbsp;        emailService.notifyMemberDeleted();</b>
+<b class="fc">&nbsp;        memberRepository.deleteById(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Member getMemberInfo(final String memberId) {
+<b class="fc">&nbsp;        return memberRepository.findById(memberId).orElseThrow(() -&gt; new NotFoundException(&quot;Member not found&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void validateUpdateRequest(final String memberId, final String email, final String phoneNumber) {
+<b class="fc">&nbsp;        if (memberRepository.existsByEmailAndIdNot(email, memberId)) {</b>
+<b class="fc">&nbsp;            throw new ConflictException(&quot;Email already in use&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (memberRepository.existsByPhoneNumberAndIdNot(phoneNumber, memberId)) {</b>
+<b class="fc">&nbsp;            throw new ConflictException(&quot;Phone already in use&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private void deleteUserByMemberId(final String memberId) {
+<b class="fc">&nbsp;        userInfoRepository.findByMemberId(memberId).ifPresent(user -&gt; userInfoRepository.deleteById(user.getId()));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void notifyMemberWithWelcomeEmail(final CreateMemberRequestDTO createMemberRequestDTO,
+&nbsp;                                              final String tempPwd) {
+<b class="fc">&nbsp;        emailService.sendWelcomeWithTempPassword(createMemberRequestDTO.email(), createMemberRequestDTO.name(),</b>
+&nbsp;                tempPwd,
+&nbsp;                loginUrl
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    private UserInfo buildUserForNewMember(final CreateMemberRequestDTO createMemberRequestDTO,
+&nbsp;                                           final String tempPwd,
+&nbsp;                                           final Member savedMember) {
+<b class="fc">&nbsp;        return UserInfo.builder()</b>
+<b class="fc">&nbsp;                .userName(createMemberRequestDTO.email())</b>
+<b class="fc">&nbsp;                .password(encoder.encode(tempPwd))</b>
+<b class="fc">&nbsp;                .roles(Set.of(MEMBER.name()))</b>
+<b class="fc">&nbsp;                .mustChangePassword(true)</b>
+<b class="fc">&nbsp;                .memberId(savedMember.getId())</b>
+<b class="fc">&nbsp;                .build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static Member getUpdatedMember(
+&nbsp;            final UpdateMemberRequest updateMemberRequest,
+&nbsp;            final Member member,
+&nbsp;            final String name,
+&nbsp;            final String email,
+&nbsp;            final String phoneNumber
+&nbsp;    ) {
+<b class="fc">&nbsp;        member.setName(name);</b>
+<b class="fc">&nbsp;        member.setEmail(email);</b>
+<b class="fc">&nbsp;        member.setPhoneNumber(phoneNumber);</b>
+<b class="fc">&nbsp;        member.setAge(updateMemberRequest.age());</b>
+<b class="fc">&nbsp;        member.setPlace(updateMemberRequest.place().trim().replaceAll(&quot;\\s+&quot;, &quot; &quot;));</b>
+<b class="fc">&nbsp;        return member;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>

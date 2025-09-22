@@ -1,0 +1,159 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > UserService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.service</a>
+</div>
+
+<h1>Coverage Summary for Class: UserService (com.quickstarts.kitchensink.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">UserService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    89.5%
+  </span>
+  <span class="absValue">
+    (17/19)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.service;
+&nbsp;
+&nbsp;import com.quickstarts.kitchensink.dto.CreateUserRequest;
+&nbsp;import com.quickstarts.kitchensink.dto.enums.Role;
+&nbsp;import com.quickstarts.kitchensink.dto.UserResponse;
+&nbsp;import com.quickstarts.kitchensink.exception.UserCreationException;
+&nbsp;import com.quickstarts.kitchensink.model.UserInfo;
+&nbsp;import com.quickstarts.kitchensink.repo.UserInfoRepository;
+&nbsp;import lombok.AllArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.dao.DataAccessException;
+&nbsp;import org.springframework.security.crypto.password.PasswordEncoder;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;import java.util.Set;
+&nbsp;
+&nbsp;@Service
+&nbsp;@AllArgsConstructor
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;public class UserService {
+&nbsp;
+&nbsp;    private final UserInfoRepository userInfoRepository;
+&nbsp;    private final PasswordEncoder encoder;
+&nbsp;
+&nbsp;    public UserResponse createUser(final CreateUserRequest createUserRequest) throws UserCreationException {
+&nbsp;
+<b class="fc">&nbsp;        final var userInfo = UserInfo.builder()</b>
+<b class="fc">&nbsp;                .userName(createUserRequest.email())</b>
+<b class="fc">&nbsp;                .password(encoder.encode(createUserRequest.password()))</b>
+<b class="fc">&nbsp;                .roles(Set.of(Role.ADMIN.name()))</b>
+<b class="fc">&nbsp;                .build();</b>
+&nbsp;        try {
+<b class="fc">&nbsp;            UserInfo userInfo1 = userInfoRepository.save(userInfo);</b>
+<b class="fc">&nbsp;            log.info(&quot;user created: {}&quot;, userInfo1);</b>
+&nbsp;        } catch (DataAccessException e) {
+<b class="nc">&nbsp;            log.error(&quot;Database error while creating user: {}&quot;, e.getMessage(), e);</b>
+<b class="nc">&nbsp;            throw new UserCreationException(&quot;Failed to create user due to database error&quot;, e);</b>
+&nbsp;        } catch (Exception e1) {
+<b class="fc">&nbsp;            log.error(&quot;error occurred while creating user:{}&quot;, e1.getMessage(), e1);</b>
+<b class="fc">&nbsp;            throw new UserCreationException(&quot;Failed to create user due to unknown error&quot;, e1);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return UserResponse.builder()</b>
+<b class="fc">&nbsp;                .message(&quot;user created successfully !!&quot;)</b>
+<b class="fc">&nbsp;                .build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void resetPassword(final String username, final String newPassword) {
+<b class="fc">&nbsp;        var user = userInfoRepository.findByUserName(username).orElseThrow();</b>
+<b class="fc">&nbsp;        user.setPassword(encoder.encode(newPassword));</b>
+<b class="fc">&nbsp;        user.setMustChangePassword(false);</b>
+&nbsp;        // user.setPasswordUpdatedAt(Instant.now());
+<b class="fc">&nbsp;        userInfoRepository.save(user);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>

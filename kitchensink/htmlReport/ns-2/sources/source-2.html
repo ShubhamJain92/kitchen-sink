@@ -1,0 +1,151 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > EmailProperties</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.config</a>
+</div>
+
+<h1>Coverage Summary for Class: EmailProperties (com.quickstarts.kitchensink.config)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+  <tr>
+    <td class="name">EmailProperties$NotifyMode</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.config;
+&nbsp;
+&nbsp;import lombok.Data;
+&nbsp;import org.springframework.boot.context.properties.ConfigurationProperties;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;@Data
+&nbsp;@ConfigurationProperties(prefix = &quot;app.mail&quot;)
+&nbsp;public class EmailProperties {
+&nbsp;    /**
+&nbsp;     * From address shown to the recipient.
+&nbsp;     * Defaults to spring.mail.username if not set.
+&nbsp;     */
+&nbsp;    private String from;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * How admin recipients are resolved: REPO (query Role.ADMIN users) or STATIC (use emails list).
+&nbsp;     */
+&nbsp;    private NotifyMode notifyMode = NotifyMode.REPO;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Used when notifyMode = STATIC, e.g., [&quot;admin1@x.test&quot;,&quot;admin2@x.test&quot;]
+&nbsp;     */
+&nbsp;    private List&lt;String&gt; emails;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Base URL used to build approve/reject links in admin emails.
+&nbsp;     * e.g., http://localhost:8080 (dev) or https://admin.example.com (prod)
+&nbsp;     */
+&nbsp;    private String approveBaseUrl = &quot;http://localhost:8080&quot;;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Login URL used in the welcome email&#39;s Sign in button.
+&nbsp;     */
+&nbsp;    private String loginUrl = &quot;http://localhost:8080/auth/login&quot;;
+&nbsp;
+<b class="fc">&nbsp;    public enum NotifyMode { REPO, STATIC }</b>
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>

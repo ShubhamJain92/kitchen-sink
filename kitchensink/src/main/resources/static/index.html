@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Welcome to Kitchen Sink</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root{
+          --bg1:#0f172a; --bg2:#1e293b; --card:rgba(255,255,255,.08); --border:rgba(255,255,255,.14);
+          --text:#f1f5f9; --muted:#cbd5e1; --brand:#7c3aed; --accent:#06b6d4;
+          --ok:#22c55e; --warn:#f59e0b; --err:#ef4444;
+          color-scheme: dark light;
+        }
+        *{ box-sizing:border-box }
+        body{
+          margin:0; min-height:100vh; color:var(--text);
+          font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+          background:
+            radial-gradient(1200px 800px at 10% 10%, #1f2937 0%, transparent 60%),
+            radial-gradient(1000px 700px at 90% 20%, #111827 0%, transparent 55%),
+            linear-gradient(160deg, var(--bg1), var(--bg2));
+          padding:2rem; display:grid; gap:1.25rem; justify-items:center;
+        }
+        .container{ width:min(1400px,96vw); display:grid; gap:1rem }
+        header{ display:flex; align-items:center; gap:1rem }
+        .logo{ width:44px; height:44px; border-radius:12px; display:grid; place-items:center;
+          background:linear-gradient(135deg,var(--brand),var(--accent)); color:#fff; font-weight:800;
+          box-shadow:0 8px 24px rgba(124,58,237,.35)}
+        h1{ margin:0; font-size:1.5rem }
+        .muted{ color:var(--muted) }
+
+        .grid{ display:grid; grid-template-columns: 3fr 1fr; gap:1rem }
+        @media (max-width: 1100px){ .grid{ grid-template-columns:1fr } }
+
+        .card{ background:var(--card); border:1px solid var(--border); border-radius:18px; padding:1rem; backdrop-filter: blur(10px); box-shadow:0 10px 30px rgba(0,0,0,.2) }
+        .card h2{ margin:.2rem 0 1rem }
+
+        .toolbar{ display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; margin-bottom:.6rem }
+        .toolbar input[type="search"]{ flex:1 1 360px; padding:.65rem .8rem; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,.06); color:var(--text) }
+        .toolbar select{ padding:.55rem .7rem; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,.06); color:var(--text) }
+        .btn{ border:0; border-radius:10px; padding:.55rem .85rem; font-weight:700; cursor:pointer }
+        .btn-ghost{ background:rgba(255,255,255,.08); border:1px solid var(--border); color:var(--text) }
+        .btn-primary{ background:linear-gradient(135deg,var(--brand),var(--accent)); color:#fff; box-shadow:0 8px 18px rgba(124,58,237,.35) }
+        .btn-danger{ background: linear-gradient(135deg, #ef4444, #b91c1c); color:#fff; box-shadow:0 8px 18px rgba(239,68,68,.35) }
+        .btn-danger:hover{ filter: brightness(1.06); }
+        .messages{ min-height:1.2rem } .valid{ color:var(--ok) } .invalid{ color:var(--err) } .warning{ color:var(--warn) }
+
+        table{ width:100%; border-collapse:separate; border-spacing:0 8px }
+        thead th{ text-align:left; color:var(--muted); font-size:.9rem; padding:.35rem .5rem; user-select:none; cursor:pointer }
+        tbody tr{ background:rgba(255,255,255,.06); border:1px solid var(--border); border-radius:12px }
+        tbody td{ padding:.7rem .6rem; vertical-align:middle }
+        tbody tr td:first-child{ border-top-left-radius:12px; border-bottom-left-radius:12px }
+        tbody tr td:last-child { border-top-right-radius:12px; border-bottom-right-radius:12px }
+        .sort-ind{ opacity:.8; font-size:.85em; margin-left:.25rem }
+        .pagination{ display:flex; align-items:center; gap:.5rem; margin-top:.6rem; flex-wrap:wrap }
+        .pagination .info{ color:var(--muted); font-size:.92rem }
+
+        thead th:first-child, tbody td.name{ min-width: 260px; }
+
+        label{ font-weight:600; font-size:.95rem }
+        label.required::after{ content:" *"; color:var(--err); font-weight:700; }
+        .row{ display:grid; gap:.4rem; margin-bottom:.8rem }
+
+        input[type="text"], input[type="email"], input[type="number"]{
+          width:100%; padding:.8rem .9rem; color:var(--text);
+          background:rgba(255,255,255,.06); border:1px solid var(--border); border-radius:12px; outline:none
+        }
+        input:focus{ border-color:rgba(124,58,237,.7); box-shadow:0 0 0 3px rgba(124,58,237,.25) }
+
+        .select-control{
+          appearance:none; -webkit-appearance:none; -moz-appearance:none;
+          width:100%; padding:.8rem 2.2rem .8rem .9rem; color:var(--text);
+          background:
+            rgba(255,255,255,.06)
+            url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>")
+            no-repeat right .8rem center / 14px 14px;
+          border:1px solid var(--border); border-radius:12px; outline:none; color-scheme: dark; background-color: rgba(255,255,255,.06);
+        }
+        .select-control:focus{ border-color:rgba(124,58,237,.7); box-shadow:0 0 0 3px rgba(124,58,237,.25); }
+        .select-control option, .select-control optgroup{ background-color:#0f172a; color:var(--text); }
+        .select-control option:checked, .select-control option:hover{ background-color:#1e293b; color:var(--text); }
+
+        .phone-group{ display:flex; align-items:stretch; }
+        .phone-prefix{
+          display:grid; place-items:center; padding:0 .8rem; white-space:nowrap;
+          background:rgba(255,255,255,.10); border:1px solid var(--border); border-right:0; border-radius:12px 0 0 12px;
+          font-weight:700;
+        }
+        .phone-input{ border-radius:0 12px 12px 0; border-left:0; }
+
+        .field-error{ font-size:.9rem; color:var(--err) }
+        .field-invalid{ border-color: var(--err) !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, .25); }
+
+        .logout-fab{ position: fixed; top: 16px; right: 16px; z-index: 1000; border: 0; border-radius: 999px; padding: .55rem 1rem; font-weight: 700; cursor: pointer; background: linear-gradient(135deg, var(--brand), var(--accent)); color: #fff; box-shadow: 0 8px 18px rgba(124,58,237,.35); }
+        .logout-fab:hover{ filter: brightness(1.06); }
+
+        /* Modal */
+        .modal.hidden{ display:none }
+        .modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.5); z-index:1000; }
+        .modal-card{ background:var(--bg1); border:1px solid var(--border); border-radius:16px; padding:1rem; width:min(520px, 92vw); box-shadow:0 20px 40px rgba(0,0,0,.45) }
+        .modal-card h3{ margin:.2rem 0 1rem }
+        .modal-actions{ display:flex; gap:.6rem; justify-content:flex-end; margin-top:.6rem }
+
+        /* Toasts */
+       /* --- Toast visibility boost (override) --- */
+.toast-host { z-index: 4000; }               /* ensure above everything */
+
+.toast{
+  /* solid, high-contrast surface */
+  background: rgba(15, 23, 42, 0.96);        /* near-solid slate */
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.24);
+  box-shadow:
+    0 14px 36px rgba(0,0,0,0.65),
+    0 0 0 1px rgba(255,255,255,0.06) inset;
+  backdrop-filter: blur(6px);                 /* subtle glass pop */
+}
+
+/* brighter status accents */
+.toast.success{
+  border-color: rgba(34,197,94,0.75);
+  box-shadow:
+    0 14px 36px rgba(34,197,94,0.22),
+    0 0 0 1px rgba(255,255,255,0.06) inset;
+}
+.toast.warning{
+  border-color: rgba(245,158,11,0.75);
+  box-shadow:
+    0 14px 36px rgba(245,158,11,0.22),
+    0 0 0 1px rgba(255,255,255,0.06) inset;
+}
+.toast.error{
+  border-color: rgba(239,68,68,0.8);
+  box-shadow:
+    0 14px 36px rgba(239,68,68,0.25),
+    0 0 0 1px rgba(255,255,255,0.06) inset;
+}
+
+/* make the little status dot brighter & bigger */
+.toast .dot{ width: .7rem; height: .7rem; }
+.toast.success .dot{ background:#22c55e }
+.toast.warning .dot{ background:#f59e0b }
+.toast.error   .dot{ background:#ef4444 }
+
+/* slightly stronger pop-in animation */
+@keyframes toast-in {
+  from { transform: translateY(12px) scale(.98); opacity: 0 }
+  to   { transform: translateY(0)    scale(1);    opacity: 1 }
+}
+
+    </style>
+
+</head>
+<body>
+<button id="logoutBtn" class="logout-fab" type="button" title="Logout">Logout</button>
+
+<div class="container">
+    <header>
+        <div class="logo">KS</div>
+        <div>
+            <h1>Welcome to Kitchen Sink</h1>
+            <div class="muted">Create members and browse the current list.</div>
+        </div>
+    </header>
+
+    <div class="grid">
+        <!-- LEFT -->
+        <section class="card">
+            <h2>Members</h2>
+            <div class="toolbar">
+                <input id="searchBox" type="search" placeholder="Search name, email, phone, place…" />
+                <select id="pageSize">
+                    <option value="10">10 / page</option>
+                    <option value="20">20 / page</option>
+                    <option value="50">50 / page</option>
+                </select>
+                <button id="refreshBtn" class="btn btn-ghost" type="button">Refresh</button>
+                <button id="downloadCsvBtn"  class="btn btn-ghost" type="button">Download CSV</button>
+                <button id="downloadXlsxBtn" class="btn btn-ghost" type="button">Download Excel</button>
+            </div>
+
+            <table>
+                <thead>
+                <tr>
+                    <th data-sort="name">Name <span class="sort-ind"></span></th>
+                    <th data-sort="email">Email <span class="sort-ind"></span></th>
+                    <th data-sort="phoneNumber">Phone <span class="sort-ind"></span></th>
+                    <th data-sort="age">Age <span class="sort-ind"></span></th>
+                    <th data-sort="place">Place <span class="sort-ind"></span></th>
+                    <th data-sort="registrationDate">Registration date<span class="sort-ind"></span></th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="membersBody">
+                <tr><td colspan="7" class="muted">Loading…</td></tr>
+                </tbody>
+            </table>
+
+            <div class="pagination">
+                <button id="prevBtn" class="btn btn-ghost" type="button">Prev</button>
+                <button id="nextBtn" class="btn btn-ghost" type="button">Next</button>
+                <span id="pageInfo" class="info"></span>
+            </div>
+            <!-- hidden by default -->
+            <div id="membersMsg" class="messages" style="display:none"></div>
+        </section>
+
+        <!-- RIGHT -->
+        <section class="card">
+            <h2>Register a member</h2>
+            <p class="muted">All fields are required.</p>
+
+            <form id="regForm" novalidate>
+                <div class="row">
+                    <label class="required" for="name">Name</label>
+                    <input id="name" name="name" type="text" required maxlength="25" pattern="[A-Za-z .'-]{1,25}" title="Letters, spaces, . - ' ; max 25 chars; no digits">
+                    <div class="field-error" data-error-for="name"></div>
+                </div>
+
+                <div class="row">
+                    <label class="required" for="email">Email</label>
+                    <input id="email" name="email" type="email" required placeholder="you@example.com">
+                    <div class="field-error" data-error-for="email"></div>
+                </div>
+
+                <div class="row">
+                    <label class="required" for="phoneLocal">Phone (India)</label>
+                    <div class="phone-group">
+                        <div class="phone-prefix">+91</div>
+                        <input id="phoneLocal" name="phoneLocal" class="phone-input" type="text" inputmode="tel" autocomplete="tel-national"
+                               required minlength="10" maxlength="10" pattern="[6-9][0-9]{9}"
+                               placeholder="10-digit mobile (starts 6–9)" title="10 digits starting 6–9">
+                    </div>
+                    <div class="field-error" data-error-for="phoneNumber"></div>
+                </div>
+
+                <div class="row">
+                    <label class="required" for="age">Age</label>
+                    <select id="age" name="age" class="select-control" required>
+                        <option value="" disabled selected>Choose age</option>
+                    </select>
+                    <div class="field-error" data-error-for="age"></div>
+                </div>
+
+                <div class="row" style="margin-bottom:.2rem">
+                    <label class="required" for="place">Place</label>
+                    <input id="place" name="place" type="text" required maxlength="50" pattern="[A-Za-z .,'-]{1,50}" placeholder="City / Town"
+                           title="Letters, spaces, . , - ' ; max 50 chars; no digits">
+                    <div class="field-error" data-error-for="place"></div>
+                </div>
+
+                <div style="display:flex; gap:.6rem; align-items:center; flex-wrap:wrap">
+                    <button id="registerBtn" class="btn btn-primary" type="submit">Register</button>
+                    <div id="globalMessages" class="messages"></div>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <div class="modal-card">
+        <h3 id="editTitle">Update member</h3>
+        <form id="editForm" novalidate>
+            <input type="hidden" id="m-id">
+            <div class="row">
+                <label class="required" for="m-name">Name</label>
+                <input id="m-name" type="text" required maxlength="25" pattern="[A-Za-z .'-]{1,25}" title="Letters, spaces, . - ' ; max 25 chars; no digits">
+                <div class="field-error" data-edit-error-for="name"></div>
+            </div>
+            <div class="row">
+                <label class="required" for="m-email">Email</label>
+                <input id="m-email" type="email" required maxlength="254" placeholder="you@example.com">
+                <div class="field-error" data-edit-error-for="email"></div>
+            </div>
+            <div class="row">
+                <label class="required" for="m-phone">Phone (India)</label>
+                <div class="phone-group">
+                    <div class="phone-prefix">+91</div>
+                    <input id="m-phone" class="phone-input" type="text" required minlength="10" maxlength="10" pattern="[6-9][0-9]{9}" placeholder="10-digit mobile (starts 6–9)">
+                </div>
+                <div class="field-error" data-edit-error-for="phoneNumber"></div>
+            </div>
+            <div class="row">
+                <label class="required" for="m-age">Age</label>
+                <select id="m-age" class="select-control" required>
+                    <option value="" disabled selected>Choose age</option>
+                </select>
+                <div class="field-error" data-edit-error-for="age"></div>
+            </div>
+            <div class="row">
+                <label class="required" for="m-place">Place</label>
+                <input id="m-place" type="text" required maxlength="50" pattern="[A-Za-z .,'-]{1,50}" placeholder="City / Town">
+                <div class="field-error" data-edit-error-for="place"></div>
+            </div>
+            <div id="editGlobalErrors" class="messages"></div>
+            <div class="modal-actions">
+                <button type="button" id="btn-cancel" class="btn btn-ghost">Cancel</button>
+                <button type="submit" id="btn-save" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Toast host -->
+<div id="toastHost" class="toast-host" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+    const $  = (s, c=document)=>c.querySelector(s);
+    const $$ = (s, c=document)=>Array.from(c.querySelectorAll(s));
+
+    function showToast(message, type = 'success', durationMs = 3000){
+      const host = document.getElementById('toastHost'); if (!host) return;
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = `<span class="dot"></span><div class="msg">${message}</div><button class="close" title="Dismiss">×</button>`;
+      host.appendChild(el);
+      const remove = () => { el.style.animation = 'toast-out .15s ease-in forwards'; setTimeout(() => el.remove(), 150); };
+      el.querySelector('.close')?.addEventListener('click', remove);
+      setTimeout(remove, durationMs);
+    }
+
+    const state = { page:0, size:10, sort:'registrationDate', dir:'desc', q:'' };
+    let lastTotalPages = 1, lastTotal = 0;
+
+    function getCookie(name){
+      return document.cookie.split('; ').find(r => r.startsWith(name+'='))?.split('=')[1];
+    }
+
+    const api = {
+      search: async (st) => {
+        const dto = { page:st.page, size:st.size, sortBy:[st.sort], dir:st.dir, q: st.q || undefined };
+        const res = await fetch('/member/search', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin', body: JSON.stringify(dto)
+        });
+        if (!res.ok) { const err = new Error('HTTP ' + res.status); err.status = res.status; throw err; }
+        const page = await res.json();
+        return { content: page.content ?? [], total: page.totalElements ?? 0, totalPages: page.totalPages ?? 1 };
+      },
+      create: async (payload) => {
+        const res = await fetch('member/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '' },
+          credentials: 'same-origin', body: JSON.stringify(payload)
+        });
+        let body = null; try { body = await res.json(); } catch(_) {}
+        return { ok: res.ok, status: res.status, body };
+      },
+      getOne: async (id) => {
+        const res = await fetch(`/member/${encodeURIComponent(id)}`, { credentials:'same-origin', headers:{'Accept':'application/json'} });
+        let body = null; try { body = await res.json(); } catch(_) {}
+        return { ok: res.ok, status: res.status, body };
+      },
+      update: async (id, payload) => {
+        const res = await fetch(`/member/${encodeURIComponent(id)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Accept':'application/json', 'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '' },
+          credentials: 'same-origin', body: JSON.stringify(payload)
+        });
+        let body = null; try { body = await res.json(); } catch(_) {}
+        return { ok: res.ok, status: res.status, body };
+      },
+      delete: async (id) => {
+        const res = await fetch(`/member/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          credentials: 'same-origin',
+          headers: { 'Accept':'application/json', 'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '' }
+        });
+        let body = null; try { body = await res.json(); } catch(_) {}
+        return { ok: res.ok, status: res.status, body };
+      }
+    };
+
+    // error banner helpers (hide by default; only show on errors)
+    function hideMembersMsg(){ const el=$('#membersMsg'); el.textContent=''; el.className='messages'; el.style.display='none'; }
+    function showMembersError(text){ const el=$('#membersMsg'); el.textContent=text||'Error'; el.className='messages invalid'; el.style.display='block'; }
+
+    function updateSortIndicators(){
+      $$('thead th').forEach(th=>{ const k=th.dataset.sort, ind=$('.sort-ind',th); ind.textContent = (state.sort===k) ? (state.dir==='asc'?'▲':'▼') : ''; });
+    }
+
+    function formatRegDate(v){
+      if (!v) return '';
+      if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
+        const [y, m, d] = v.split('-').map(Number);
+        const dt = new Date(Date.UTC(y, m - 1, d));
+        return dt.toLocaleDateString('en-IN', { timeZone: 'UTC', day: '2-digit', month: 'short', year: 'numeric' });
+      }
+      const dt = (typeof v === 'number') ? new Date(v) : new Date(String(v));
+      if (isNaN(dt)) return '';
+      return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function renderMembers(items){
+      const tbody=$('#membersBody'); tbody.innerHTML='';
+      if(!items.length){
+        const tr=document.createElement('tr'); const td=document.createElement('td');
+        td.colSpan=7; td.className='muted'; td.textContent='No members found.'; tr.appendChild(td); tbody.appendChild(tr);
+      } else {
+        for(const m of items){
+          const tr=document.createElement('tr');
+          tr.dataset.id = m.id ?? '';
+          const cells = [
+            ['name', m.name], ['email', m.email], ['phoneNumber', m.phoneNumber],
+            ['age', m.age], ['place', m.place], ['registrationDate', formatRegDate(m.registrationDate)]
+          ];
+          for (const [cls, val] of cells){
+            const td=document.createElement('td'); td.className=cls; td.textContent=(val??''); tr.appendChild(td);
+          }
+          const tdAct = document.createElement('td'); tdAct.style.whiteSpace = 'nowrap';
+          const btnUpdate = Object.assign(document.createElement('button'), {type:'button', className:'btn btn-ghost btn-edit', textContent:'Update'});
+          const btnDelete = Object.assign(document.createElement('button'), {type:'button', className:'btn btn-danger btn-delete', textContent:'Delete'});
+          btnDelete.style.marginLeft='.4rem';
+          tdAct.append(btnUpdate, btnDelete); tr.appendChild(tdAct); tbody.appendChild(tr);
+        }
+      }
+      const from = lastTotal===0 ? 0 : (state.page*state.size + 1);
+      const to = Math.min(lastTotal, (state.page+1)*state.size);
+      $('#pageInfo').textContent = `Showing ${from}-${to} of ${lastTotal} • Page ${state.page+1} / ${Math.max(lastTotalPages,1)}`;
+      $('#prevBtn').disabled = state.page<=0;
+      $('#nextBtn').disabled = state.page>=lastTotalPages-1;
+      updateSortIndicators();
+    }
+
+    async function refresh(){
+      try{
+        hideMembersMsg(); // don’t show loading or stale errors
+        const {content,total,totalPages} = await api.search(state);
+        lastTotal = total; lastTotalPages = totalPages;
+        renderMembers(content);
+        hideMembersMsg(); // make sure banner is hidden after success
+      }catch(e){
+        console.error(e);
+        //showMembersError(e.status===403 ? 'Forbidden (403). Log in as ADMIN.' : 'Could not load members');
+      }
+    }
+
+    let tSearch;
+    $('#searchBox').addEventListener('input', e=>{ clearTimeout(tSearch); tSearch=setTimeout(()=>{ state.q=e.target.value.trim(); state.page=0; refresh(); },300); });
+    $('#pageSize').addEventListener('change', e=>{ state.size=parseInt(e.target.value,10)||10; state.page=0; refresh(); });
+    $('#prevBtn')?.addEventListener('click', ()=>{ if(state.page>0){ state.page--; refresh(); }});
+    $('#nextBtn')?.addEventListener('click', ()=>{ if(state.page<lastTotalPages-1){ state.page++; refresh(); }});
+    $('#refreshBtn').addEventListener('click', refresh);
+    $$('thead th').forEach(th=>{ const key=th.dataset.sort; if(!key) return;
+      th.addEventListener('click', ()=>{ if(state.sort===key) state.dir = (state.dir==='asc'?'desc':'asc'); else { state.sort=key; state.dir='asc'; } state.page=0; refresh(); });
+    });
+
+    const phoneLocal = $('#phoneLocal');
+    function normalizeLocal(value){
+      if (!value) return '';
+      let s = value.replace(/\D+/g,''); if (s.startsWith('0')) s = s.substring(1); if (s.startsWith('91')) s = s.substring(2); if (s.length > 10) s = s.slice(-10); return s;
+    }
+    function validateLocal(){ const s = normalizeLocal(phoneLocal.value); phoneLocal.value = s; let msg = ''; if (s.length !== 10) msg = 'Enter 10 digits'; else if (!/^[6-9]\d{9}$/.test(s)) msg = 'Must start with 6–9'; phoneLocal.setCustomValidity(msg); return !msg; }
+    phoneLocal.addEventListener('input', validateLocal); phoneLocal.addEventListener('blur', validateLocal);
+
+    function clearFieldErrors(){ $$('.field-error').forEach(el => el.textContent = ''); $$('#regForm input, #regForm select').forEach(el => el.classList.remove('field-invalid')); }
+    function showFieldError(field, message){
+      const targetName = field === 'phoneNumber' ? 'phoneLocal' : field;
+      const input  = document.getElementById(targetName) || document.querySelector(`[name="${targetName}"]`);
+      const holder = document.querySelector(`[data-error-for="${field}"]`) || document.querySelector(`[data-error-for="${targetName}"]`);
+      if (input)  input.classList.add('field-invalid'); if (holder) holder.textContent = message;
+    }
+    $$('#regForm input, #regForm select').forEach(el => {
+      el.addEventListener('input', () => {
+        el.classList.remove('field-invalid');
+        const holder = document.querySelector(`[data-error-for="${el.id}"]`) || document.querySelector(`[data-error-for="${el.name}"]`);
+        if (holder) holder.textContent = '';
+      });
+    });
+
+    function setGlobalMsg(kind, text){ const el=$('#globalMessages'); el.className='messages ' + (kind==='ok'?'valid':kind==='warn'?'warning':'invalid'); el.textContent=text||''; }
+
+    $('#regForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      clearFieldErrors();
+      if (!validateLocal()) { phoneLocal.reportValidity(); return; }
+      setGlobalMsg('warn','Registering…');
+      $('#registerBtn').disabled = true;
+      const f = e.currentTarget;
+      if(!f.reportValidity()){ setGlobalMsg('err','Please fix validation errors.'); $('#registerBtn').disabled=false; return; }
+
+      const payload = {
+        name: f.name.value.trim().replace(/\s+/g,' '),
+        email: f.email.value.trim().toLowerCase(),
+        phoneNumber: '+91' + phoneLocal.value,
+        age: parseInt(f.age.value,10),
+        place: f.place.value.trim().replace(/\s+/g,' ')
+      };
+
+      try{
+        const { ok, status, body } = await api.create(payload);
+        if(ok){
+          setGlobalMsg('ok','Member created successfully.');
+          showToast('Member created successfully.', 'success', 4500);
+          f.reset();
+          refresh();
+        } else {
+          let fieldMap = (body && typeof body === 'object') ? (body.errors || body.fieldErrors) : null;
+          if (fieldMap && typeof fieldMap === 'object') {
+            let any=false; Object.entries(fieldMap).forEach(([k,v])=>{ const msg = Array.isArray(v) ? v[0] : v; showFieldError(k, msg); any=true; });
+            setGlobalMsg('err', any ? 'Please fix the highlighted errors.' : (body.detail || body.title || 'Validation failed.'));
+          } else {
+            setGlobalMsg('err', body?.detail || body?.message || `Registration failed (HTTP ${status}).`);
+          }
+        }
+      }catch(err){
+        console.error(err);
+        setGlobalMsg('err','Unexpected error while registering.');
+      }finally{
+        $('#registerBtn').disabled = false;
+      }
+    });
+
+    (function setupLogout(){
+      const btn = document.getElementById('logoutBtn'); if (!btn) return;
+      btn.addEventListener('click', async () => { await fetch('/logout', { method: 'POST', credentials: 'same-origin' }); location.href = '/login?logout'; });
+    })();
+
+    // Edit modal
+    const editModal = $('#editModal'); const editForm  = $('#editForm'); const editErrors = $('#editGlobalErrors');
+    function openEdit(){ editModal.classList.remove('hidden'); }
+    function closeEdit(){ editModal.classList.add('hidden'); editErrors.textContent=''; }
+    $('#btn-cancel').addEventListener('click', closeEdit);
+
+    function populateAges(select){ select.innerHTML = '<option value="" disabled selected>Choose age</option>'; for (let i = 1; i <= 120; i++) { const opt = document.createElement('option'); opt.value = String(i); opt.textContent = String(i); select.appendChild(opt); } }
+    function normalizeLocalForEdit(value){ if (!value) return ''; let s = value.replace(/\D+/g,''); if (s.startsWith('0')) s = s.substring(1); if (s.startsWith('91')) s = s.substring(2); if (s.length > 10) s = s.slice(-10); return s; }
+    function validateLocalEdit(){ const inp = $('#m-phone'); const s = normalizeLocalForEdit(inp.value); inp.value = s; let msg = ''; if (s.length !== 10) msg = 'Enter 10 digits'; else if (!/^[6-9]\d{9}$/.test(s)) msg = 'Must start with 6–9'; inp.setCustomValidity(msg); return !msg; }
+    $('#m-phone').addEventListener('input', validateLocalEdit); $('#m-phone').addEventListener('blur', validateLocalEdit);
+
+    document.addEventListener('click', async (e) => {
+      if (!e.target.classList.contains('btn-edit')) return;
+      const tr = e.target.closest('tr'); const id = tr?.dataset.id; if (!id) { showToast('Missing member id', 'error'); return; }
+      const { ok, body } = await api.getOne(id);
+      if (!ok) { showToast('Failed to load member', 'error'); return; }
+      $('#m-id').value = body?.id || id; $('#m-name').value = body?.name ?? ''; $('#m-email').value = body?.email ?? '';
+      const phone = (body?.phoneNumber || '').replace(/\D+/g,''); $('#m-phone').value = normalizeLocalForEdit(phone);
+      populateAges($('#m-age')); if (body?.age) $('#m-age').value = String(body.age); $('#m-place').value = body?.place ?? '';
+      editErrors.textContent = ''; $$('[data-edit-error-for]').forEach(el => el.textContent = ''); $$('#editForm input, #editForm select').forEach(el => el.classList.remove('field-invalid'));
+      openEdit();
+    });
+
+    document.addEventListener('click', async (e) => {
+      if (!e.target.classList.contains('btn-delete')) return;
+      const tr = e.target.closest('tr'); const id = tr?.dataset.id; if (!id) { showToast('Missing member id', 'error'); return; }
+      if (!confirm('Are you sure you want to delete this member?')) return;
+      const { ok, status, body } = await api.delete(id);
+      if (ok || status === 204) { tr.remove(); refresh(); showToast('Member deleted', 'success', 4500); return; }
+      showToast((body && (body.message || body.detail)) || `Delete failed (HTTP ${status}).`, 'error');
+    });
+
+    function showEditFieldError(field, message){
+      const map = { phoneNumber: 'm-phone', name:'m-name', email:'m-email', age:'m-age', place:'m-place' };
+      const id = map[field] || field; const input = document.getElementById(id); const holder = document.querySelector(`[data-edit-error-for="${field}"]`);
+      if (input) input.classList.add('field-invalid'); if (holder) holder.textContent = message || 'Invalid';
+    }
+    $$('#editForm input, #editForm select').forEach(el => {
+      el.addEventListener('input', () => {
+        el.classList.remove('field-invalid');
+        const key = el.id.replace(/^m-/, '');
+        const holder = document.querySelector(`[data-edit-error-for="${key}"]`);
+        if (holder) holder.textContent = '';
+      });
+    });
+
+    editForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      editErrors.textContent = '';
+      if (!validateLocalEdit()) { $('#m-phone').reportValidity(); return; }
+      if (!editForm.reportValidity()) { editErrors.className='messages invalid'; editErrors.textContent='Please fix validation errors.'; return; }
+      const id = $('#m-id').value;
+      const payload = {
+        name: $('#m-name').value.trim().replace(/\s+/g,' '),
+        email: $('#m-email').value.trim().toLowerCase(),
+        phoneNumber: '+91' + $('#m-phone').value.trim(),
+        age: parseInt($('#m-age').value,10),
+        place: $('#m-place').value.trim().replace(/\s+/g,' ')
+      };
+      $('#btn-save').disabled = true;
+      const { ok, status, body } = await api.update(id, payload);
+      $('#btn-save').disabled = false;
+      if (ok) {
+        const row = document.querySelector(`tr[data-id="${id}"]`);
+        if (row) {
+          row.querySelector('.name').textContent = body?.name ?? payload.name;
+          row.querySelector('.email').textContent = body?.email ?? payload.email;
+          row.querySelector('.phoneNumber').textContent = body?.phoneNumber ?? payload.phoneNumber;
+          row.querySelector('.age').textContent = body?.age ?? payload.age;
+          row.querySelector('.place').textContent = body?.place ?? payload.place;
+        }
+        closeEdit();
+        showToast('Member updated', 'success', 4500);
+        return;
+      }
+      if (status === 400 && body && (body.errors || body.fieldErrors)) {
+        const errs = body.errors || body.fieldErrors;
+        if (Array.isArray(errs)) errs.forEach(e => showEditFieldError(e.field || e.name || '', e.message || e.defaultMessage));
+        else Object.entries(errs).forEach(([k,v]) => showEditFieldError(k, Array.isArray(v)? v[0] : v));
+        editErrors.className='messages invalid'; editErrors.textContent='Please fix the highlighted errors.'; return;
+      }
+      editErrors.className='messages invalid';
+      editErrors.textContent = (body && (body.message||body.detail)) || `Update failed (HTTP ${status}).`;
+    });
+
+    (function init(){
+      $('#pageSize').value = String(state.size);
+      const ageSel = document.getElementById('age'); if (ageSel) { ageSel.innerHTML = '<option value="" disabled selected>Choose age</option>'; for (let i=1;i<=120;i++){ const o=document.createElement('option'); o.value=String(i); o.textContent=String(i); ageSel.appendChild(o);} }
+      hideMembersMsg(); // ensure hidden on first render
+      refresh();
+    })();
+
+    function buildExportUrl(fmt){
+      const p = new URLSearchParams(); if (state.q) p.set('q', state.q); if (state.sort) p.append('sortBy', state.sort); if (state.dir)  p.set('dir', state.dir);
+      return `/member/export?format=${fmt}&` + p.toString();
+    }
+    document.getElementById('downloadCsvBtn').addEventListener('click', () => { window.location.href = buildExportUrl('csv'); });
+    document.getElementById('downloadXlsxBtn').addEventListener('click', () => { window.location.href = buildExportUrl('xlsx'); });
+</script>
+</body>
+</html>

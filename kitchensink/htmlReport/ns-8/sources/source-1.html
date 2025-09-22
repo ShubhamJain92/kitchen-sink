@@ -1,0 +1,463 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > EmailService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.service</a>
+</div>
+
+<h1>Coverage Summary for Class: EmailService (com.quickstarts.kitchensink.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">EmailService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    82.4%
+  </span>
+  <span class="absValue">
+    (14/17)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    58%
+  </span>
+  <span class="absValue">
+    (29/50)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    84.6%
+  </span>
+  <span class="absValue">
+    (77/91)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.service;
+&nbsp;
+&nbsp;
+&nbsp;import com.quickstarts.kitchensink.config.EmailProperties;
+&nbsp;import com.quickstarts.kitchensink.dto.MemberUpdateDTO;
+&nbsp;import com.quickstarts.kitchensink.model.Member;
+&nbsp;import com.quickstarts.kitchensink.model.MemberChangeRequest;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.beans.factory.annotation.Value;
+&nbsp;import org.springframework.lang.Nullable;
+&nbsp;import org.springframework.mail.javamail.JavaMailSender;
+&nbsp;import org.springframework.mail.javamail.MimeMessageHelper;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.web.util.HtmlUtils;
+&nbsp;
+&nbsp;import java.util.Collection;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;import static java.nio.charset.StandardCharsets.UTF_8;
+&nbsp;import static org.slf4j.LoggerFactory.getLogger;
+&nbsp;import static org.springframework.mail.javamail.MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED;
+&nbsp;import static org.springframework.web.util.HtmlUtils.htmlEscape;
+&nbsp;
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;public class EmailService {
+&nbsp;
+&nbsp;    private final JavaMailSender mailSender;
+&nbsp;    private final EmailProperties props;
+&nbsp;
+&nbsp;    @Value(&quot;${app.admin.email: admin@kitchensink.com}&quot;)
+&nbsp;    private String adminEmail;
+&nbsp;
+&nbsp;    @Value(&quot;${app.base-url:http://localhost:8080}&quot;)
+&nbsp;    private String baseUrl;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sent when admin creates a member+user with a temporary password.
+&nbsp;     */
+&nbsp;    public void sendWelcomeWithTempPassword(final String toEmail,
+&nbsp;                                            final @Nullable String memberName,
+&nbsp;                                            final String tempPassword,
+&nbsp;                                            final String loginUrl) {
+&nbsp;
+<b class="fc">&nbsp;        final var subject = &quot;You&#39;re added as a member — set your password&quot;;</b>
+<b class="fc">&nbsp;        final var html = &quot;&quot;&quot;</b>
+&nbsp;                &lt;div style=&quot;font-family:system-ui,Arial,sans-serif&quot;&gt;
+&nbsp;                  &lt;h2&gt;Welcome%s&lt;/h2&gt;
+&nbsp;                  &lt;p&gt;Your account has been created. Use the temporary password below to sign in; you’ll then be asked to set a new password.&lt;/p&gt;
+&nbsp;                  &lt;table cellspacing=&quot;0&quot; cellpadding=&quot;6&quot; style=&quot;border:1px solid #eee&quot;&gt;
+&nbsp;                    &lt;tr&gt;&lt;td&gt;&lt;b&gt;Email&lt;/b&gt;&lt;/td&gt;&lt;td&gt;%s&lt;/td&gt;&lt;/tr&gt;
+&nbsp;                    &lt;tr&gt;&lt;td&gt;&lt;b&gt;Temporary password&lt;/b&gt;&lt;/td&gt;&lt;td&gt;&lt;code&gt;%s&lt;/code&gt;&lt;/td&gt;&lt;/tr&gt;
+&nbsp;                  &lt;/table&gt;
+&nbsp;                  &lt;p style=&quot;margin-top:14px&quot;&gt;
+&nbsp;                    &lt;a href=&quot;%s&quot; style=&quot;background:#0d6efd;color:#fff;padding:8px 12px;text-decoration:none;border-radius:6px&quot;&gt;Sign in&lt;/a&gt;
+&nbsp;                  &lt;/p&gt;
+&nbsp;                  &lt;p&gt;If you didn’t expect this email, please ignore it.&lt;/p&gt;
+&nbsp;                &lt;/div&gt;
+<b class="fc">&nbsp;                &quot;&quot;&quot;.formatted(nameSuffix(memberName), esc(toEmail), esc(tempPassword),</b>
+<b class="pc">&nbsp;                loginUrl != null ? loginUrl : props.getLoginUrl());</b>
+<b class="fc">&nbsp;        sendHtml(List.of(toEmail), subject, html);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void notifyMemberUpdateApproved(final String memberEmail, final MemberChangeRequest changeRequest) {
+<b class="fc">&nbsp;        final var memberSnapshotBefore = changeRequest.getBefore();     // snapshot before change</b>
+<b class="fc">&nbsp;        final var memberUpdateDTO = changeRequest.getMemberUpdateDTO();  // values requested</b>
+<b class="fc">&nbsp;        final var rows = new StringBuilder();</b>
+<b class="fc">&nbsp;        diffRow(rows, &quot;Name&quot;, memberSnapshotBefore.name(), memberUpdateDTO.name());</b>
+<b class="fc">&nbsp;        diffRow(rows, &quot;Email&quot;, memberSnapshotBefore.email(), memberUpdateDTO.email());</b>
+<b class="fc">&nbsp;        diffRow(rows, &quot;Phone&quot;, memberSnapshotBefore.phoneNumber(), memberUpdateDTO.phoneNumber());</b>
+<b class="fc">&nbsp;        diffRow(rows, &quot;Age&quot;, memberSnapshotBefore.age(), memberUpdateDTO.age());</b>
+<b class="fc">&nbsp;        diffRow(rows, &quot;Place&quot;, memberSnapshotBefore.place(), memberUpdateDTO.place());</b>
+&nbsp;
+<b class="fc">&nbsp;        final var memberName = memberSnapshotBefore.name();</b>
+&nbsp;
+<b class="fc">&nbsp;        final var html = &quot;&quot;&quot;</b>
+&nbsp;                &lt;div style=&quot;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111&quot;&gt;
+&nbsp;                  &lt;h2 style=&quot;margin:0 0 8px&quot;&gt;Your profile update was approved ✅&lt;/h2&gt;
+&nbsp;                  &lt;p&gt;Hi %s, your requested changes were approved and applied to your profile.&lt;/p&gt;
+&nbsp;                  &lt;table cellpadding=&quot;8&quot; cellspacing=&quot;0&quot; style=&quot;border-collapse:collapse;border:1px solid #e5e7eb;min-width:420px&quot;&gt;
+&nbsp;                    &lt;thead&gt;
+&nbsp;                      &lt;tr&gt;
+&nbsp;                        &lt;th align=&quot;left&quot; style=&quot;background:#f3f4f6;border-bottom:1px solid #e5e7eb&quot;&gt;Field&lt;/th&gt;
+&nbsp;                        &lt;th align=&quot;left&quot; style=&quot;background:#f3f4f6;border-bottom:1px solid #e5e7eb&quot;&gt;Before&lt;/th&gt;
+&nbsp;                        &lt;th align=&quot;left&quot; style=&quot;background:#f3f4f6;border-bottom:1px solid #e5e7eb&quot;&gt;After&lt;/th&gt;
+&nbsp;                      &lt;/tr&gt;
+&nbsp;                    &lt;/thead&gt;
+&nbsp;                    &lt;tbody&gt;%s&lt;/tbody&gt;
+&nbsp;                  &lt;/table&gt;
+&nbsp;                  &lt;p style=&quot;margin-top:12px&quot;&gt;If anything looks wrong, reply to this email.&lt;/p&gt;
+&nbsp;                &lt;/div&gt;
+<b class="fc">&nbsp;                &quot;&quot;&quot;.formatted(escape(memberName), rows.toString());</b>
+&nbsp;
+<b class="fc">&nbsp;        safeSendHtml(memberEmail, &quot;Your profile update was approved&quot;, html);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void notifyMemberDeleteApproved(final String memberEmail, final String memberName) {
+<b class="nc">&nbsp;        final var display = memberName != null ? memberName : &quot;there&quot;;</b>
+<b class="nc">&nbsp;        final var html = &quot;&quot;&quot;</b>
+&nbsp;                &lt;div style=&quot;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111&quot;&gt;
+&nbsp;                  &lt;h2 style=&quot;margin:0 0 8px&quot;&gt;Your account deletion was approved&lt;/h2&gt;
+&nbsp;                  &lt;p&gt;Hi %s, your request memberEmail delete your account has been approved. Your data has been removed from our system.&lt;/p&gt;
+&nbsp;                  &lt;p&gt;If this was a mistake, please contact support immediately.&lt;/p&gt;
+&nbsp;                &lt;/div&gt;
+<b class="nc">&nbsp;                &quot;&quot;&quot;.formatted(escape(display));</b>
+&nbsp;
+<b class="nc">&nbsp;        safeSendHtml(memberEmail, &quot;Your account deletion was approved&quot;, html);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void notifyMemberRejected(final String memberEmail, final String reason) {
+<b class="fc">&nbsp;        final var html = &quot;&quot;&quot;</b>
+&nbsp;                &lt;div style=&quot;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111&quot;&gt;
+&nbsp;                  &lt;h2 style=&quot;margin:0 0 8px&quot;&gt;Your request could not be approved&lt;/h2&gt;
+&nbsp;                  &lt;p&gt;Your request was rejected by the admin.%s&lt;/p&gt;
+&nbsp;                &lt;/div&gt;
+<b class="pc">&nbsp;                &quot;&quot;&quot;.formatted(reason != null &amp;&amp; !reason.isBlank() ? &quot; Reason: &quot; + escape(reason) : &quot;&quot;);</b>
+<b class="fc">&nbsp;        safeSendHtml(memberEmail, &quot;Your request was rejected&quot;, html);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // --- HTML email: UPDATE ---
+&nbsp;    public void notifyAdminUpdate(final Member member, final MemberUpdateDTO memberUpdateDTO) {
+<b class="pc">&nbsp;        if (adminEmail == null || adminEmail.isBlank()) return;</b>
+&nbsp;
+<b class="fc">&nbsp;        String reviewUrl = baseUrl + &quot;/auth/admin-gate?go=/admin/requests&quot;;</b>
+&nbsp;
+<b class="fc">&nbsp;        StringBuilder rows = new StringBuilder();</b>
+<b class="fc">&nbsp;        rows.append(htmlRow(&quot;Name&quot;, member.getName(), memberUpdateDTO.name()));</b>
+<b class="fc">&nbsp;        rows.append(htmlRow(&quot;Email&quot;, member.getEmail(), memberUpdateDTO.email()));</b>
+<b class="fc">&nbsp;        rows.append(htmlRow(&quot;Phone&quot;, member.getPhoneNumber(), memberUpdateDTO.phoneNumber()));</b>
+<b class="fc">&nbsp;        rows.append(htmlRow(&quot;Age&quot;, member.getAge(), memberUpdateDTO.age()));</b>
+<b class="fc">&nbsp;        rows.append(htmlRow(&quot;Place&quot;, member.getPlace(), memberUpdateDTO.place()));</b>
+&nbsp;
+<b class="fc">&nbsp;        String html = &quot;&quot;&quot;</b>
+&nbsp;                &lt;!DOCTYPE html&gt;
+&nbsp;                &lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;
+&nbsp;                &lt;title&gt;Member change request (UPDATE)&lt;/title&gt;&lt;/head&gt;
+&nbsp;                &lt;body style=&quot;margin:0;padding:0;background:#f6f8fb;&quot;&gt;
+&nbsp;                  &lt;table role=&quot;presentation&quot; width=&quot;100%%&quot; cellspacing=&quot;0&quot; cellpadding=&quot;0&quot; border=&quot;0&quot; style=&quot;background:#f6f8fb;padding:24px 0;&quot;&gt;
+&nbsp;                    &lt;tr&gt;&lt;td align=&quot;center&quot;&gt;
+&nbsp;                      &lt;table width=&quot;600&quot; cellspacing=&quot;0&quot; cellpadding=&quot;0&quot; border=&quot;0&quot;
+&nbsp;                             style=&quot;background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;
+&nbsp;                                    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111827;&quot;&gt;
+&nbsp;                        &lt;tr&gt;&lt;td style=&quot;padding:20px 24px;border-bottom:1px solid #e5e7eb;&quot;&gt;
+&nbsp;                          &lt;h2 style=&quot;margin:0;font-size:18px;&quot;&gt;Member change request (UPDATE)&lt;/h2&gt;
+&nbsp;                          &lt;p style=&quot;margin:6px 0 0;color:#6b7280;font-size:14px;&quot;&gt;%s (%s)&lt;/p&gt;
+&nbsp;                        &lt;/td&gt;&lt;/tr&gt;
+&nbsp;                        &lt;tr&gt;&lt;td style=&quot;padding:16px 24px;&quot;&gt;
+&nbsp;                          &lt;table width=&quot;100%%&quot; cellspacing=&quot;0&quot; cellpadding=&quot;0&quot; border=&quot;0&quot; style=&quot;border-collapse:collapse;&quot;&gt;
+&nbsp;                            &lt;thead&gt;&lt;tr&gt;
+&nbsp;                              &lt;th align=&quot;left&quot; style=&quot;padding:8px 6px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.03em;&quot;&gt;Field&lt;/th&gt;
+&nbsp;                              &lt;th align=&quot;left&quot; style=&quot;padding:8px 6px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.03em;&quot;&gt;Current&lt;/th&gt;
+&nbsp;                              &lt;th align=&quot;left&quot; style=&quot;padding:8px 6px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.03em;&quot;&gt;Requested&lt;/th&gt;
+&nbsp;                            &lt;/tr&gt;&lt;/thead&gt;
+&nbsp;                            &lt;tbody&gt;
+&nbsp;                              %s
+&nbsp;                            &lt;/tbody&gt;
+&nbsp;                          &lt;/table&gt;
+&nbsp;                          &lt;p style=&quot;margin:16px 0 0;color:#6b7280;font-size:13px;&quot;&gt;This request is &lt;strong&gt;pending&lt;/strong&gt; review.&lt;/p&gt;
+&nbsp;                        &lt;/td&gt;&lt;/tr&gt;
+&nbsp;                        &lt;tr&gt;&lt;td style=&quot;padding:18px 24px;border-top:1px solid #e5e7eb;&quot; align=&quot;right&quot;&gt;
+&nbsp;                          &lt;a href=&quot;%s&quot; style=&quot;display:inline-block;padding:10px 14px;background:#4f46e5;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;&quot;&gt;Open Admin Console&lt;/a&gt;
+&nbsp;                        &lt;/td&gt;&lt;/tr&gt;
+&nbsp;                      &lt;/table&gt;
+&nbsp;                    &lt;/td&gt;&lt;/tr&gt;
+&nbsp;                  &lt;/table&gt;
+&nbsp;                &lt;/body&gt;&lt;/html&gt;
+<b class="fc">&nbsp;                &quot;&quot;&quot;.formatted(htmlEscape(member.getName()), htmlEscape(member.getEmail()), rows, htmlEscape(reviewUrl));</b>
+&nbsp;
+<b class="fc">&nbsp;        sendHtml(List.of(adminEmail), &quot;Member change request&quot;, html);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // --- HTML email: DELETE ---
+&nbsp;    public void notifyAdminDelete(final Member member) {
+<b class="pc">&nbsp;        if (adminEmail == null || adminEmail.isBlank()) return;</b>
+&nbsp;
+<b class="fc">&nbsp;        final var reviewUrl = baseUrl + &quot;/auth/admin-gate?go=/admin/requests&quot;;</b>
+&nbsp;
+<b class="fc">&nbsp;        final var html = &quot;&quot;&quot;</b>
+&nbsp;                &lt;!DOCTYPE html&gt;
+&nbsp;                &lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&gt;
+&nbsp;                &lt;title&gt;Member delete request&lt;/title&gt;&lt;/head&gt;
+&nbsp;                &lt;body style=&quot;margin:0;padding:0;background:#f6f8fb;&quot;&gt;
+&nbsp;                  &lt;table role=&quot;presentation&quot; width=&quot;100%%&quot; cellspacing=&quot;0&quot; cellpadding=&quot;0&quot; border=&quot;0&quot; style=&quot;background:#f6f8fb;padding:24px 0;&quot;&gt;
+&nbsp;                    &lt;tr&gt;&lt;td align=&quot;center&quot;&gt;
+&nbsp;                      &lt;table width=&quot;600&quot; cellspacing=&quot;0&quot; cellpadding=&quot;0&quot; border=&quot;0&quot;
+&nbsp;                             style=&quot;background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;
+&nbsp;                                    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111827;&quot;&gt;
+&nbsp;                        &lt;tr&gt;&lt;td style=&quot;padding:20px 24px;border-bottom:1px solid #e5e7eb;&quot;&gt;
+&nbsp;                          &lt;h2 style=&quot;margin:0;font-size:18px;&quot;&gt;Member delete request&lt;/h2&gt;
+&nbsp;                          &lt;p style=&quot;margin:6px 0 0;color:#6b7280;font-size:14px;&quot;&gt;%s (%s)&lt;/p&gt;
+&nbsp;                        &lt;/td&gt;&lt;/tr&gt;
+&nbsp;                        &lt;tr&gt;&lt;td style=&quot;padding:16px 24px;&quot;&gt;
+&nbsp;                          &lt;table width=&quot;100%%&quot; cellspacing=&quot;0&quot; cellpadding=&quot;0&quot; border=&quot;0&quot; style=&quot;border-collapse:collapse;&quot;&gt;
+&nbsp;                            &lt;tbody&gt;
+&nbsp;                              &lt;tr&gt;&lt;td style=&quot;padding:6px 0;color:#6b7280;width:90px;&quot;&gt;Name&lt;/td&gt;&lt;td style=&quot;padding:6px 0;&quot;&gt;%s&lt;/td&gt;&lt;/tr&gt;
+&nbsp;                              &lt;tr&gt;&lt;td style=&quot;padding:6px 0;color:#6b7280;&quot;&gt;Email&lt;/td&gt;&lt;td style=&quot;padding:6px 0;&quot;&gt;%s&lt;/td&gt;&lt;/tr&gt;
+&nbsp;                              &lt;tr&gt;&lt;td style=&quot;padding:6px 0;color:#6b7280;&quot;&gt;Phone&lt;/td&gt;&lt;td style=&quot;padding:6px 0;&quot;&gt;%s&lt;/td&gt;&lt;/tr&gt;
+&nbsp;                              &lt;tr&gt;&lt;td style=&quot;padding:6px 0;color:#6b7280;&quot;&gt;Age&lt;/td&gt;&lt;td style=&quot;padding:6px 0;&quot;&gt;%s&lt;/td&gt;&lt;/tr&gt;
+&nbsp;                              &lt;tr&gt;&lt;td style=&quot;padding:6px 0;color:#6b7280;&quot;&gt;Place&lt;/td&gt;&lt;td style=&quot;padding:6px 0;&quot;&gt;%s&lt;/td&gt;&lt;/tr&gt;
+&nbsp;                            &lt;/tbody&gt;
+&nbsp;                          &lt;/table&gt;
+&nbsp;                          &lt;p style=&quot;margin:16px 0 0;color:#6b7280;font-size:13px;&quot;&gt;This deletion is &lt;strong&gt;pending&lt;/strong&gt; admin approval.&lt;/p&gt;
+&nbsp;                        &lt;/td&gt;&lt;/tr&gt;
+&nbsp;                        &lt;tr&gt;&lt;td style=&quot;padding:18px 24px;border-top:1px solid #e5e7eb;&quot; align=&quot;right&quot;&gt;
+&nbsp;                          &lt;a href=&quot;%s&quot; style=&quot;display:inline-block;padding:10px 14px;background:#ef4444;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;&quot;&gt;Open Admin Console&lt;/a&gt;
+&nbsp;                        &lt;/td&gt;&lt;/tr&gt;
+&nbsp;                      &lt;/table&gt;
+&nbsp;                    &lt;/td&gt;&lt;/tr&gt;
+&nbsp;                  &lt;/table&gt;
+&nbsp;                &lt;/body&gt;&lt;/html&gt;
+<b class="fc">&nbsp;                &quot;&quot;&quot;.formatted(</b>
+<b class="fc">&nbsp;                escape(member.getName()), escape(member.getEmail()),</b>
+<b class="fc">&nbsp;                escape(member.getName()), escape(member.getEmail()), escape(member.getPhoneNumber()),</b>
+<b class="fc">&nbsp;                escape(member.getAge()), escape(member.getPlace()),</b>
+<b class="fc">&nbsp;                escape(reviewUrl)</b>
+&nbsp;        );
+<b class="fc">&nbsp;        sendHtml(List.of(adminEmail), &quot;Member delete request&quot;, html);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Send HTML mail recipients multiple recipients.
+&nbsp;     */
+&nbsp;    public void sendHtml(final Collection&lt;String&gt; recipients, final String subject, final String html) {
+&nbsp;        try {
+<b class="fc">&nbsp;            final var mime = mailSender.createMimeMessage();</b>
+<b class="fc">&nbsp;            final var helper = new MimeMessageHelper(</b>
+&nbsp;                    mime,
+&nbsp;                    MULTIPART_MODE_MIXED_RELATED,
+<b class="fc">&nbsp;                    UTF_8.name()</b>
+&nbsp;            );
+<b class="fc">&nbsp;            helper.setFrom(resolveFrom());</b>
+<b class="fc">&nbsp;            helper.setTo(recipients.stream().map(String::trim).toArray(String[]::new));</b>
+<b class="fc">&nbsp;            helper.setSubject(subject);</b>
+<b class="fc">&nbsp;            helper.setText(html, true);</b>
+<b class="fc">&nbsp;            mailSender.send(mime);</b>
+&nbsp;        } catch (Exception e) {
+<b class="fc">&nbsp;            log.error(&quot;sendHtml failed: {}&quot;, e.getMessage(), e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private String resolveFrom() {
+<b class="pc">&nbsp;        if (props.getFrom() != null &amp;&amp; !props.getFrom().isBlank()) return props.getFrom();</b>
+&nbsp;        // Fallback to Spring Mail username if provided
+&nbsp;        try {
+&nbsp;            // Some providers require the authenticated username as FROM
+<b class="nc">&nbsp;            var pd = EmailService.class.getClassLoader()</b>
+<b class="nc">&nbsp;                    .loadClass(&quot;org.springframework.mail.javamail.JavaMailSenderImpl&quot;);</b>
+<b class="nc">&nbsp;            if (pd.isInstance(mailSender)) {</b>
+<b class="nc">&nbsp;                var username = (String) pd.getMethod(&quot;getUsername&quot;).invoke(mailSender);</b>
+<b class="nc">&nbsp;                if (username != null &amp;&amp; !username.isBlank()) return username;</b>
+&nbsp;            }
+&nbsp;        } catch (Exception exception) {
+<b class="nc">&nbsp;            log.error(&quot;error occurred:{}&quot;, exception.getMessage());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return &quot;no-reply@example.test&quot;;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Append a table row only when a value actually changes.
+&nbsp;     */
+&nbsp;    private void diffRow(
+&nbsp;            final StringBuilder stringBuilder,
+&nbsp;            final String label,
+&nbsp;            final Object before,
+&nbsp;            final Object after
+&nbsp;    ) {
+<b class="pc">&nbsp;        final String b = before == null ? &quot;&quot; : String.valueOf(before);</b>
+<b class="fc">&nbsp;        final String a = after == null ? b : String.valueOf(after); // treat null &quot;requested&quot; as unchanged</b>
+<b class="fc">&nbsp;        if (!java.util.Objects.equals(b, a)) {</b>
+<b class="fc">&nbsp;            stringBuilder.append(&quot;&lt;tr&gt;&quot;)</b>
+<b class="fc">&nbsp;                    .append(&quot;&lt;td&gt;&quot;).append(escape(label)).append(&quot;&lt;/td&gt;&quot;)</b>
+<b class="fc">&nbsp;                    .append(&quot;&lt;td&gt;&quot;).append(escape(b)).append(&quot;&lt;/td&gt;&quot;)</b>
+<b class="fc">&nbsp;                    .append(&quot;&lt;td&gt;&quot;).append(escape(a)).append(&quot;&lt;/td&gt;&quot;)</b>
+<b class="fc">&nbsp;                    .append(&quot;&lt;/tr&gt;&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Send and swallow/log failures so admin action is not blocked by email.
+&nbsp;     */
+&nbsp;    private void safeSendHtml(final String memberEmail, final String subject, final String html) {
+&nbsp;        try {
+<b class="fc">&nbsp;            sendHtml(List.of(memberEmail), subject, html);</b>
+&nbsp;        } catch (final Exception ex) {
+<b class="nc">&nbsp;            getLogger(getClass()).warn(&quot;Failed memberEmail send email memberEmail {}: {}&quot;, memberEmail, ex.getMessage());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String esc(String s) {
+<b class="pc">&nbsp;        if (s == null) return &quot;&quot;;</b>
+<b class="fc">&nbsp;        return s.replace(&quot;&amp;&quot;, &quot;&amp;amp;&quot;)</b>
+<b class="fc">&nbsp;                .replace(&quot;&lt;&quot;, &quot;&amp;lt;&quot;)</b>
+<b class="fc">&nbsp;                .replace(&quot;&gt;&quot;, &quot;&amp;gt;&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /* =========================
+&nbsp;       Generic helpers you can reuse
+&nbsp;       ========================= */
+&nbsp;
+&nbsp;    private static String nameSuffix(final String name) {
+<b class="pc">&nbsp;        return (name == null || name.isBlank()) ? &quot;&quot; : &quot;, &quot; + esc(name);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Basic HTML escape using Spring&#39;s utility.
+&nbsp;     */
+&nbsp;    private static String escape(final Object value) {
+<b class="pc">&nbsp;        return HtmlUtils.htmlEscape(value == null ? &quot;&quot; : String.valueOf(value));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private static String htmlRow(final String field, final Object current, final Object requested) {
+<b class="fc">&nbsp;        String cur = escape(current);</b>
+<b class="fc">&nbsp;        boolean hasReq = requested != null &amp;&amp; !String.valueOf(requested).isBlank();</b>
+<b class="fc">&nbsp;        String req = hasReq ? escape(requested) : &quot;—&quot;;</b>
+<b class="fc">&nbsp;        boolean changed = hasReq &amp;&amp; !String.valueOf(requested).equals(String.valueOf(current));</b>
+&nbsp;
+<b class="fc">&nbsp;        String reqStyle = changed</b>
+<b class="fc">&nbsp;                ? &quot;font-weight:600;color:#16a34a;&quot;</b>
+<b class="fc">&nbsp;                : &quot;color:#6b7280;&quot;;</b>
+&nbsp;
+<b class="fc">&nbsp;        return &quot;&quot;&quot;</b>
+&nbsp;                &lt;tr&gt;
+&nbsp;                  &lt;td style=&quot;padding:8px 6px;border-bottom:1px solid #f3f4f6;&quot;&gt;%s&lt;/td&gt;
+&nbsp;                  &lt;td style=&quot;padding:8px 6px;border-bottom:1px solid #f3f4f6;&quot;&gt;%s&lt;/td&gt;
+&nbsp;                  &lt;td style=&quot;padding:8px 6px;border-bottom:1px solid #f3f4f6;%s&quot;&gt;%s%s&lt;/td&gt;
+&nbsp;                &lt;/tr&gt;
+<b class="fc">&nbsp;                &quot;&quot;&quot;.formatted(</b>
+<b class="fc">&nbsp;                escape(field),</b>
+&nbsp;                cur,
+&nbsp;                reqStyle,
+&nbsp;                req,
+<b class="fc">&nbsp;                changed ? &quot; &lt;span style=&#39;color:#9ca3af&#39;&gt;(changed)&lt;/span&gt;&quot; : &quot;&quot;</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    public void notifyMemberUpdated() {
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;    }</b>
+&nbsp;
+&nbsp;    public void notifyMemberDeleted() {
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;    }</b>
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>

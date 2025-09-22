@@ -1,0 +1,217 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MemberQueryService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.service</a>
+</div>
+
+<h1>Coverage Summary for Class: MemberQueryService (com.quickstarts.kitchensink.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MemberQueryService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    63.3%
+  </span>
+  <span class="absValue">
+    (19/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    81.4%
+  </span>
+  <span class="absValue">
+    (35/43)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.service;
+&nbsp;
+&nbsp;import com.quickstarts.kitchensink.dto.MemberFilterRequest;
+&nbsp;import com.quickstarts.kitchensink.model.Member;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import org.springframework.data.domain.Page;
+&nbsp;import org.springframework.data.domain.PageImpl;
+&nbsp;import org.springframework.data.domain.PageRequest;
+&nbsp;import org.springframework.data.domain.Sort;
+&nbsp;import org.springframework.data.mongodb.core.MongoTemplate;
+&nbsp;import org.springframework.data.mongodb.core.query.Criteria;
+&nbsp;import org.springframework.data.mongodb.core.query.Query;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;import java.time.LocalDate;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Set;
+&nbsp;import java.util.regex.Pattern;
+&nbsp;
+&nbsp;import static com.quickstarts.kitchensink.utils.MemberUtils.hasText;
+&nbsp;import static com.quickstarts.kitchensink.utils.MemberUtils.tryParseLocalDate;
+&nbsp;import static java.lang.Integer.MAX_VALUE;
+&nbsp;import static java.lang.Math.clamp;
+&nbsp;import static java.util.Objects.requireNonNullElse;
+&nbsp;import static org.springframework.data.domain.Sort.Direction.ASC;
+&nbsp;import static org.springframework.data.domain.Sort.Direction.DESC;
+&nbsp;
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class MemberQueryService {
+&nbsp;
+&nbsp;    private final Set&lt;String&gt; allowedColumns = Set.of(&quot;name&quot;, &quot;email&quot;, &quot;phoneNumber&quot;, &quot;age&quot;, &quot;place&quot;, &quot;registrationDate&quot;);
+&nbsp;    private final MongoTemplate mongoTemplate;
+&nbsp;
+&nbsp;    public Page&lt;Member&gt; searchMembers(final MemberFilterRequest filterRequest) {
+<b class="fc">&nbsp;        final var page = clamp(requireNonNullElse(filterRequest.getPage(), 0), 0, MAX_VALUE);</b>
+<b class="fc">&nbsp;        final var size = clamp(requireNonNullElse(filterRequest.getSize(), 10), 1, 100);</b>
+<b class="pc">&nbsp;        final var fields = ((filterRequest.getSortBy() == null || filterRequest.getSortBy().isEmpty())</b>
+<b class="fc">&nbsp;                ? List.of(&quot;registrationDate&quot;) : filterRequest.getSortBy())</b>
+<b class="fc">&nbsp;                .stream().filter(allowedColumns::contains).toList();</b>
+&nbsp;
+<b class="pc">&nbsp;        final var direction = &quot;desc&quot;.equalsIgnoreCase(filterRequest.getDir()) ? DESC : ASC;</b>
+<b class="fc">&nbsp;        final var sort = Sort.by(fields.stream().map(fn -&gt; new Sort.Order(direction, fn)).toList());</b>
+<b class="fc">&nbsp;        final var pageable = PageRequest.of(page, size, sort);</b>
+&nbsp;
+<b class="fc">&nbsp;        final var query = new Query().with(pageable);</b>
+<b class="fc">&nbsp;        final List&lt;Criteria&gt; criteriaList = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;        // --- Free-text query over text fields only; optionally match exact LocalDate if query parses
+<b class="fc">&nbsp;        if (hasText(filterRequest.getQ())) {</b>
+<b class="fc">&nbsp;            final var term = filterRequest.getQ().trim();</b>
+<b class="fc">&nbsp;            final var rx = Pattern.quote(term);</b>
+&nbsp;
+<b class="fc">&nbsp;            List&lt;Criteria&gt; ors = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;            ors.add(Criteria.where(&quot;name&quot;).regex(rx, &quot;i&quot;));</b>
+<b class="fc">&nbsp;            ors.add(Criteria.where(&quot;email&quot;).regex(rx, &quot;i&quot;));</b>
+<b class="fc">&nbsp;            ors.add(Criteria.where(&quot;phoneNumber&quot;).regex(rx, &quot;i&quot;));</b>
+<b class="fc">&nbsp;            ors.add(Criteria.where(&quot;place&quot;).regex(rx, &quot;i&quot;));</b>
+&nbsp;
+&nbsp;            // if query looks like yyyy-MM-dd, include an exact date match
+<b class="fc">&nbsp;            LocalDate parsed = tryParseLocalDate(term);</b>
+<b class="pc">&nbsp;            if (parsed != null) {</b>
+<b class="nc">&nbsp;                ors.add(Criteria.where(&quot;registrationDate&quot;).is(parsed));</b>
+&nbsp;            }
+<b class="fc">&nbsp;            criteriaList.add(new Criteria().orOperator(ors.toArray(Criteria[]::new)));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // --- Field-specific filters
+<b class="pc">&nbsp;        if (hasText(filterRequest.getName()))</b>
+<b class="nc">&nbsp;            criteriaList.add(Criteria.where(&quot;name&quot;).regex(Pattern.quote(filterRequest.getName().trim()), &quot;i&quot;));</b>
+<b class="pc">&nbsp;        if (hasText(filterRequest.getEmail()))</b>
+<b class="nc">&nbsp;            criteriaList.add(Criteria.where(&quot;email&quot;).regex(Pattern.quote(filterRequest.getEmail().trim()), &quot;i&quot;));</b>
+<b class="pc">&nbsp;        if (hasText(filterRequest.getPhoneNumber()))</b>
+<b class="nc">&nbsp;            criteriaList.add(Criteria.where(&quot;phoneNumber&quot;).regex(Pattern.quote(filterRequest.getPhoneNumber().trim()), &quot;i&quot;));</b>
+<b class="pc">&nbsp;        if (hasText(filterRequest.getPlace()))</b>
+<b class="nc">&nbsp;            criteriaList.add(Criteria.where(&quot;place&quot;).regex(Pattern.quote(filterRequest.getPlace().trim()), &quot;i&quot;));</b>
+<b class="fc">&nbsp;        if (filterRequest.getAgeMin() != 0) criteriaList.add(Criteria.where(&quot;age&quot;).gte(filterRequest.getAgeMin()));</b>
+<b class="fc">&nbsp;        if (filterRequest.getAgeMax() != 0) criteriaList.add(Criteria.where(&quot;age&quot;).lte(filterRequest.getAgeMax()));</b>
+&nbsp;
+&nbsp;        // --- LocalDate filters: exact / from / to
+<b class="pc">&nbsp;        if (filterRequest.getRegistrationDate() != null) {</b>
+<b class="nc">&nbsp;            criteriaList.add(Criteria.where(&quot;registrationDate&quot;).is(filterRequest.getRegistrationDate()));</b>
+&nbsp;        } else {
+<b class="pc">&nbsp;            if (filterRequest.getRegistrationDateFrom() != null) {</b>
+<b class="nc">&nbsp;                criteriaList.add(Criteria.where(&quot;registrationDate&quot;).gte(filterRequest.getRegistrationDateFrom()));</b>
+&nbsp;            }
+<b class="pc">&nbsp;            if (filterRequest.getRegistrationDateTo() != null) {</b>
+<b class="nc">&nbsp;                criteriaList.add(Criteria.where(&quot;registrationDate&quot;).lte(filterRequest.getRegistrationDateTo()));</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (!criteriaList.isEmpty()) {</b>
+<b class="fc">&nbsp;            query.addCriteria(new Criteria().andOperator(criteriaList.toArray(Criteria[]::new)));</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        final var total = mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Member.class);</b>
+<b class="fc">&nbsp;        final var content = mongoTemplate.find(query, Member.class);</b>
+<b class="fc">&nbsp;        return new PageImpl&lt;&gt;(content, pageable, total);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>

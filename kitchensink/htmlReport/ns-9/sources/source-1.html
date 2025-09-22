@@ -1,0 +1,172 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MemberUtils</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.utils</a>
+</div>
+
+<h1>Coverage Summary for Class: MemberUtils (com.quickstarts.kitchensink.utils)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MemberUtils</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (8/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    70%
+  </span>
+  <span class="absValue">
+    (7/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (15/15)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.utils;
+&nbsp;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;
+&nbsp;import java.security.SecureRandom;
+&nbsp;import java.time.LocalDate;
+&nbsp;import java.time.format.DateTimeParseException;
+&nbsp;import java.util.Arrays;
+&nbsp;
+&nbsp;import static java.util.stream.Collectors.joining;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;public class MemberUtils {
+&nbsp;
+&nbsp;    private MemberUtils() {
+&nbsp;        //private constructor
+&nbsp;    }
+&nbsp;
+&nbsp;    public static boolean hasText(final String s) {
+<b class="fc">&nbsp;        return s != null &amp;&amp; !s.trim().isEmpty();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static String generateTempPassword() {
+<b class="fc">&nbsp;        final var alphabet = &quot;ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&amp;*?&quot;;</b>
+<b class="fc">&nbsp;        return new SecureRandom().ints(16, 0, alphabet.length())</b>
+<b class="fc">&nbsp;                .collect(StringBuilder::new,</b>
+<b class="fc">&nbsp;                        (sb, idx) -&gt; sb.append(alphabet.charAt(idx)),</b>
+&nbsp;                        StringBuilder::append)
+<b class="fc">&nbsp;                .toString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // MemberUtils.java
+&nbsp;    public static LocalDate tryParseLocalDate(String s) {
+<b class="pc">&nbsp;        if (!hasText(s)) return null;</b>
+&nbsp;        try {
+<b class="fc">&nbsp;            return LocalDate.parse(s); // or with a DateTimeFormatter.ISO_LOCAL_DATE</b>
+&nbsp;        } catch (DateTimeParseException e) {
+&nbsp;            // return null silently (or log at DEBUG if you prefer)
+<b class="fc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    public static String formatDate(final LocalDate localDate) {
+<b class="pc">&nbsp;        return localDate == null ? &quot;&quot; : localDate.toString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static String emptyIfNull(final String s) {
+<b class="fc">&nbsp;        return s == null ? &quot;&quot; : s;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public static String toProperCase(final String name) {
+<b class="fc">&nbsp;        return Arrays.stream(name.split(&quot;\\s+&quot;))</b>
+<b class="pc">&nbsp;                .map(s -&gt; s.isEmpty() ? s : s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase())</b>
+<b class="fc">&nbsp;                .collect(joining(&quot; &quot;));</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,105 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MemberFilterRequest</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.quickstarts.kitchensink.dto</a>
+</div>
+
+<h1>Coverage Summary for Class: MemberFilterRequest (com.quickstarts.kitchensink.dto)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">MemberFilterRequest</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.quickstarts.kitchensink.dto;
+&nbsp;
+&nbsp;import lombok.*;
+&nbsp;
+&nbsp;import java.time.LocalDate;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;@Getter
+&nbsp;@Setter
+&nbsp;@NoArgsConstructor
+&nbsp;@AllArgsConstructor
+&nbsp;@Builder
+&nbsp;public class MemberFilterRequest {
+&nbsp;    // paging
+&nbsp;    @Builder.Default
+&nbsp;    private int page = 0;
+&nbsp;    @Builder.Default
+&nbsp;    private int size = 10;
+&nbsp;
+&nbsp;    // sorting (allow one or many fields)
+&nbsp;    @Builder.Default
+&nbsp;    private List&lt;String&gt; sortBy = List.of(&quot;name&quot;);
+&nbsp;    @Builder.Default
+&nbsp;    private String dir = &quot;asc&quot;; // asc|desc (applies to all sortBy fields)
+&nbsp;
+&nbsp;    // filters (all optional)
+&nbsp;    private String q;            // free-text across name/email/phone/place
+&nbsp;    private String name;
+&nbsp;    private String email;
+&nbsp;    private String phoneNumber;
+&nbsp;    private String place;
+&nbsp;    private int ageMin;
+&nbsp;    private int ageMax;
+&nbsp;    private LocalDate registrationDate;       // exact
+&nbsp;    private LocalDate registrationDateFrom;   // range start (inclusive)
+&nbsp;    private LocalDate registrationDateTo;   // range end   (inclusive)
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-09-21 23:11</div>
+</div>
+</body>
+</html>
