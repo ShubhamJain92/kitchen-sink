@@ -8,6 +8,7 @@ import com.quickstarts.kitchensink.service.MemberService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -64,6 +65,11 @@ public class MemberController {
     public ResponseEntity<Void> delete(@PathVariable final String id) {
         memberService.delete(id);
         return noContent().build();
+    }
+
+    @GetMapping(path = "/{id}", produces = APPLICATION_JSON_VALUE)
+    public Member lookupMemberById(@PathVariable final String id) {
+        return memberService.getMemberInfo(id);
     }
 
     @PostMapping(value = "/search", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)

@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Set;
 
@@ -23,6 +24,7 @@ import static com.quickstarts.kitchensink.dto.enums.Role.MEMBER;
 import static com.quickstarts.kitchensink.utils.MemberUtils.generateTempPassword;
 import static com.quickstarts.kitchensink.utils.MemberUtils.toProperCase;
 import static java.util.Optional.ofNullable;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -86,7 +88,7 @@ public class MemberService {
         memberRepository.deleteById(id);
     }
 
-    private Member getMemberInfo(final String memberId) {
+    public Member getMemberInfo(final String memberId) {
         return memberRepository.findById(memberId).orElseThrow(() -> new NotFoundException("Member not found"));
     }
 
