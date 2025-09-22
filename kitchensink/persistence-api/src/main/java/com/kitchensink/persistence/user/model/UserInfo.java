@@ -1,7 +1,7 @@
-package com.quickstarts.kitchensink.model;
+package com.kitchensink.persistence.user.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.quickstarts.kitchensink.dto.enums.Role;
+import com.kitchensink.persistence.common.dto.enums.Role;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;

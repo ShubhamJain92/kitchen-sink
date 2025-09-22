@@ -1,6 +1,6 @@
-package com.quickstarts.kitchensink.repo;
+package com.kitchensink.persistence.user.repo;
 
-import com.quickstarts.kitchensink.model.UserInfo;
+import com.kitchensink.persistence.user.model.UserInfo;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.Optional;

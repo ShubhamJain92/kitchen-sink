@@ -11,7 +11,8 @@
 	<groupId>com.quickstarts</groupId>
 	<artifactId>kitchensink</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>kitchensink</name>
+    <packaging>pom</packaging>
+    <name>kitchensink</name>
 	<description>Demo project for Migration</description>
 	<url/>
 	<licenses>
@@ -20,7 +21,13 @@
 	<developers>
 		<developer/>
 	</developers>
-	<scm>
+    <modules>
+        <module>main</module>
+        <module>api</module>
+        <module>core</module>
+        <module>persistence-api</module>
+    </modules>
+    <scm>
 		<connection/>
 		<developerConnection/>
 		<tag/>
