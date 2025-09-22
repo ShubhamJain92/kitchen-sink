@@ -77,7 +77,7 @@ public class EmailService {
 
         final var html = """
                 <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111">
-                  <h2 style="margin:0 0 8px">Your profile update was approved ✅</h2>
+                  <h2 style="margin:0 0 8px">Your profile update request is approved ✅</h2>
                   <p>Hi %s, your requested changes were approved and applied to your profile.</p>
                   <table cellpadding="8" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;min-width:420px">
                     <thead>
@@ -93,20 +93,20 @@ public class EmailService {
                 </div>
                 """.formatted(escape(memberName), rows.toString());
 
-        safeSendHtml(memberEmail, "Your profile update was approved", html);
+        safeSendHtml(memberEmail, "Your profile update request is approved", html);
     }
 
     public void notifyMemberDeleteApproved(final String memberEmail, final String memberName) {
         final var display = memberName != null ? memberName : "there";
         final var html = """
                 <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111">
-                  <h2 style="margin:0 0 8px">Your account deletion was approved</h2>
+                  <h2 style="margin:0 0 8px">Your account deletion request is approved</h2>
                   <p>Hi %s, your request memberEmail delete your account has been approved. Your data has been removed from our system.</p>
                   <p>If this was a mistake, please contact support immediately.</p>
                 </div>
                 """.formatted(escape(display));
 
-        safeSendHtml(memberEmail, "Your account deletion was approved", html);
+        safeSendHtml(memberEmail, "Your account deletion request is approved", html);
     }
 
     public void notifyMemberRejected(final String memberEmail, final String reason) {

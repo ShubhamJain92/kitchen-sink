@@ -1,0 +1,25 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  data:
+    mongodb:
+      uri: ${MONGO_URI}
+      auto-index-creation: ${MONGO_AUTO_INDEX:true}
+
+  mail:
+    host: ${SMTP_HOST}
+    port: ${SMTP_PORT:587}
+    properties:
+      mail.smtp.auth: ${SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${SMTP_STARTTLS:true}
+
+app:
+  mail:
+    from: ${EMAIL_FROM:no-reply@kitchensink.com}
+    notifyMode: ${APP_NOTIFY_MODE:REPO}          # same key, override if needed
+    approveBaseUrl: ${APP_APPROVE_BASE_URL:https://app.example.com}
+    loginUrl: ${APP_LOGIN_URL:https://app.example.com/auth/login}
+  admin:
+    email: ${ADMIN_EMAIL:admin@kitchensink.com}

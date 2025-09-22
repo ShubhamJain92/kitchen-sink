@@ -1,5 +1,6 @@
 package com.kitchensink.core.member.service;
 
+import com.kitchensink.core.member.dto.MemberResponseDTO;
 import com.kitchensink.core.notification.email.service.EmailService;
 import com.kitchensink.persistence.member.dto.MemberSnapshot;
 import com.kitchensink.persistence.member.dto.MemberUpdateDTO;
@@ -103,6 +104,21 @@ public class MemberChangeRequestService {
 
     private void saveMemberChangeRequest(final MemberChangeRequest memberChangeRequest) {
         changeRequestRepository.save(memberChangeRequest);
+    }
+
+    public MemberResponseDTO findByEmail(String email) {
+        var m = memberRepo.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found"));
+        // map entity -> DTO (inline or via MapStruct)
+        return MemberResponseDTO.builder()
+                .id(m.getId())
+                .name(m.getName())
+                .email(m.getEmail())
+                .phoneNumber(m.getPhoneNumber())
+                .age(m.getAge())
+                .place(m.getPlace())
+                .registrationDate(m.getRegistrationDate())
+                .build();
     }
 
     private Member getMember(final String memberEmail) {

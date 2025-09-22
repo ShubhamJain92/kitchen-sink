@@ -101,53 +101,100 @@
         .modal-card h3{ margin:.2rem 0 1rem }
         .modal-actions{ display:flex; gap:.6rem; justify-content:flex-end; margin-top:.6rem }
 
-        /* Toasts */
-       /* --- Toast visibility boost (override) --- */
-.toast-host { z-index: 4000; }               /* ensure above everything */
+        /* Toasts (updated) */
+        .toast-host {
+          position: fixed;
+          right: 16px;
+          bottom: 16px;
+          display: grid;
+          gap: 10px;
+          width: min(420px, 92vw);
+          z-index: 4000; /* above everything */
+          pointer-events: none; /* clicks only on the toasts themselves */
+        }
 
-.toast{
-  /* solid, high-contrast surface */
-  background: rgba(15, 23, 42, 0.96);        /* near-solid slate */
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.24);
-  box-shadow:
-    0 14px 36px rgba(0,0,0,0.65),
-    0 0 0 1px rgba(255,255,255,0.06) inset;
-  backdrop-filter: blur(6px);                 /* subtle glass pop */
-}
+        .toast {
+          pointer-events: auto;
+          display: grid;
+          grid-template-columns: 24px 1fr auto;
+          align-items: center;
+          gap: .75rem;
+          padding: .85rem 1rem;
+          border-radius: 14px;
+          border: 1px solid rgba(255,255,255,.22);
+          background: rgba(15, 23, 42, .96);
+          color: #fff;
+          box-shadow:
+            0 16px 36px rgba(0,0,0,.55),
+            0 0 0 1px rgba(255,255,255,.04) inset;
+          backdrop-filter: blur(6px);
+          transform: translateY(12px) scale(.98);
+          opacity: 0;
+          animation: toast-in .16s ease-out forwards;
+        }
 
-/* brighter status accents */
-.toast.success{
-  border-color: rgba(34,197,94,0.75);
-  box-shadow:
-    0 14px 36px rgba(34,197,94,0.22),
-    0 0 0 1px rgba(255,255,255,0.06) inset;
-}
-.toast.warning{
-  border-color: rgba(245,158,11,0.75);
-  box-shadow:
-    0 14px 36px rgba(245,158,11,0.22),
-    0 0 0 1px rgba(255,255,255,0.06) inset;
-}
-.toast.error{
-  border-color: rgba(239,68,68,0.8);
-  box-shadow:
-    0 14px 36px rgba(239,68,68,0.25),
-    0 0 0 1px rgba(255,255,255,0.06) inset;
-}
+        .toast .icon { width: 24px; height: 24px; display: grid; place-items: center; }
+        .toast .msg  { font-size: .95rem; line-height: 1.4; }
+        .toast .close,
+        .toast .action {
+          appearance: none;
+          border: 0;
+          background: transparent;
+          color: #e5e7eb;
+          font-weight: 700;
+          cursor: pointer;
+        }
+        .toast .close { font-size: 1.1rem; padding: .2rem .4rem; margin-left: .4rem; }
+        .toast .action {
+          padding: .35rem .6rem;
+          border-radius: 10px;
+          border: 1px solid rgba(255,255,255,.18);
+        }
+        .toast .action:focus-visible,
+        .toast .close:focus-visible {
+          outline: 2px solid var(--accent);
+          outline-offset: 2px;
+        }
 
-/* make the little status dot brighter & bigger */
-.toast .dot{ width: .7rem; height: .7rem; }
-.toast.success .dot{ background:#22c55e }
-.toast.warning .dot{ background:#f59e0b }
-.toast.error   .dot{ background:#ef4444 }
+        .toast .bar {
+          grid-column: 1 / -1;
+          height: 3px;
+          border-radius: 999px;
+          background: rgba(255,255,255,.16);
+          overflow: hidden;
+        }
+        .toast .bar > i {
+          display: block;
+          height: 100%;
+          width: 100%;
+          transform-origin: left;
+          animation: toast-bar linear forwards;
+        }
 
-/* slightly stronger pop-in animation */
-@keyframes toast-in {
-  from { transform: translateY(12px) scale(.98); opacity: 0 }
-  to   { transform: translateY(0)    scale(1);    opacity: 1 }
-}
+        /* Variants */
+        .toast.success { border-color: rgba(34,197,94,.7); box-shadow: 0 16px 36px rgba(34,197,94,.18), 0 0 0 1px rgba(255,255,255,.05) inset; }
+        .toast.warning { border-color: rgba(245,158,11,.7); box-shadow: 0 16px 36px rgba(245,158,11,.18), 0 0 0 1px rgba(255,255,255,.05) inset; }
+        .toast.error   { border-color: rgba(239,68,68,.8);  box-shadow: 0 16px 36px rgba(239,68,68,.22), 0 0 0 1px rgba(255,255,255,.05) inset; }
 
+        .toast.success .bar > i { background: #22c55e; }
+        .toast.warning .bar > i { background: #f59e0b; }
+        .toast.error   .bar > i { background: #ef4444; }
+
+        /* Animations */
+        @keyframes toast-in {
+          from { transform: translateY(12px) scale(.98); opacity: 0 }
+          to   { transform: translateY(0)    scale(1);    opacity: 1 }
+        }
+        @keyframes toast-out {
+          to { transform: translateY(6px) scale(.98); opacity: 0 }
+        }
+        @keyframes toast-bar {
+          from { transform: scaleX(1) }
+          to   { transform: scaleX(0) }
+        }
+
+        /* Swipe-to-dismiss (visual hint while dragging) */
+        .toast.swiping { transition: transform .05s linear; }
     </style>
 
 </head>
@@ -310,15 +357,131 @@
     const $  = (s, c=document)=>c.querySelector(s);
     const $$ = (s, c=document)=>Array.from(c.querySelectorAll(s));
 
-    function showToast(message, type = 'success', durationMs = 3000){
-      const host = document.getElementById('toastHost'); if (!host) return;
+    // ---- Toast: upgraded implementation ----
+    const TOAST_ICONS = {
+      success: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
+      warning: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+      error:   `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`
+    };
+
+    /**
+     * showToast(message, type?, durationMs?, options?)
+     * type: 'success' | 'warning' | 'error'
+     * options: { actionText?: string, onAction?: ()=>void, ariaLive?: 'polite'|'assertive' }
+     */
+    function showToast(message, type = 'success', durationMs = 3000, options = {}) {
+      const host = document.getElementById('toastHost');
+      if (!host) return;
+
+      const { actionText, onAction, ariaLive = 'polite' } = options;
+
       const el = document.createElement('div');
       el.className = `toast ${type}`;
-      el.innerHTML = `<span class="dot"></span><div class="msg">${message}</div><button class="close" title="Dismiss">×</button>`;
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-live', ariaLive);
+
+      const icon = TOAST_ICONS[type] || '';
+      el.innerHTML = `
+        <div class="icon" aria-hidden="true">${icon}</div>
+        <div class="msg">${message}</div>
+        <div class="actions">
+          ${actionText ? `<button class="action" type="button">${actionText}</button>` : ''}
+          <button class="close" type="button" title="Dismiss" aria-label="Dismiss">×</button>
+        </div>
+        <div class="bar"><i></i></div>
+      `;
+
       host.appendChild(el);
-      const remove = () => { el.style.animation = 'toast-out .15s ease-in forwards'; setTimeout(() => el.remove(), 150); };
-      el.querySelector('.close')?.addEventListener('click', remove);
-      setTimeout(remove, durationMs);
+
+      // Progress bar animation control
+      const bar = el.querySelector('.bar > i');
+      bar.style.animationDuration = `${durationMs}ms`;
+
+      // Close helpers
+      let closed = false;
+      const close = (animate = true) => {
+        if (closed) return;
+        closed = true;
+        if (animate) el.style.animation = 'toast-out .14s ease-in forwards';
+        setTimeout(() => el.remove(), animate ? 140 : 0);
+      };
+
+      // Buttons
+      el.querySelector('.close')?.addEventListener('click', () => close());
+      const act = el.querySelector('.action');
+      if (act && typeof onAction === 'function') {
+        act.addEventListener('click', () => { try { onAction(); } finally { close(); } });
+      }
+
+      // Auto-dismiss timer with hover-to-pause
+      let remaining = durationMs;
+      let start = Date.now();
+      let timer = setTimeout(close, remaining);
+
+      const pause = () => {
+        if (closed) return;
+        clearTimeout(timer);
+        const elapsed = Date.now() - start;
+        remaining = Math.max(0, remaining - elapsed);
+        bar.style.animationPlayState = 'paused';
+      };
+      const resume = () => {
+        if (closed) return;
+        start = Date.now();
+        bar.style.animationPlayState = 'running';
+        timer = setTimeout(close, remaining);
+      };
+
+      el.addEventListener('mouseenter', pause);
+      el.addEventListener('mouseleave', resume);
+      el.addEventListener('focusin', pause);
+      el.addEventListener('focusout', resume);
+
+      // Swipe-to-dismiss (drag horizontally)
+      let startX = 0, dx = 0, dragging = false;
+      const getX = (e) => e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? 0;
+
+      const onPointerDown = (e) => {
+        dragging = true;
+        startX = getX(e);
+        dx = 0;
+        el.classList.add('swiping');
+        pause();
+      };
+      const onPointerMove = (e) => {
+        if (!dragging) return;
+        dx = getX(e) - startX;
+        el.style.transform = `translate(${dx}px, 0)`;
+        el.style.opacity = String(Math.max(0, 1 - Math.abs(dx) / 140));
+      };
+      const onPointerUp = () => {
+        if (!dragging) return;
+        dragging = false;
+        el.classList.remove('swiping');
+        if (Math.abs(dx) > 100) {
+          // fling away
+          el.style.transition = 'transform .15s ease, opacity .15s ease';
+          el.style.transform = `translate(${dx > 0 ? 300 : -300}px, 0)`;
+          el.style.opacity = '0';
+          setTimeout(() => close(false), 140);
+        } else {
+          // snap back
+          el.style.transition = 'transform .12s ease, opacity .12s ease';
+          el.style.transform = '';
+          el.style.opacity = '';
+          setTimeout(() => { el.style.transition = ''; resume(); }, 130);
+        }
+      };
+
+      el.addEventListener('mousedown', onPointerDown);
+      el.addEventListener('touchstart', onPointerDown, { passive: true });
+      window.addEventListener('mousemove', onPointerMove, { passive: true });
+      window.addEventListener('touchmove', onPointerMove, { passive: true });
+      window.addEventListener('mouseup', onPointerUp, { passive: true });
+      window.addEventListener('touchend', onPointerUp, { passive: true });
+
+      // Return controller if needed
+      return { close, element: el };
     }
 
     const state = { page:0, size:10, sort:'registrationDate', dir:'desc', q:'' };
@@ -331,7 +494,7 @@
     const api = {
       search: async (st) => {
         const dto = { page:st.page, size:st.size, sortBy:[st.sort], dir:st.dir, q: st.q || undefined };
-        const res = await fetch('/member/search', {
+        const res = await fetch('/members/search', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           credentials: 'same-origin', body: JSON.stringify(dto)
         });
@@ -340,7 +503,7 @@
         return { content: page.content ?? [], total: page.totalElements ?? 0, totalPages: page.totalPages ?? 1 };
       },
       create: async (payload) => {
-        const res = await fetch('member/register', {
+        const res = await fetch('members', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '' },
           credentials: 'same-origin', body: JSON.stringify(payload)
@@ -349,12 +512,12 @@
         return { ok: res.ok, status: res.status, body };
       },
       getOne: async (id) => {
-        const res = await fetch(`/member/${encodeURIComponent(id)}`, { credentials:'same-origin', headers:{'Accept':'application/json'} });
+        const res = await fetch(`/members/${encodeURIComponent(id)}`, { credentials:'same-origin', headers:{'Accept':'application/json'} });
         let body = null; try { body = await res.json(); } catch(_) {}
         return { ok: res.ok, status: res.status, body };
       },
       update: async (id, payload) => {
-        const res = await fetch(`/member/${encodeURIComponent(id)}`, {
+        const res = await fetch(`/members/${encodeURIComponent(id)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Accept':'application/json', 'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '' },
           credentials: 'same-origin', body: JSON.stringify(payload)
@@ -363,7 +526,7 @@
         return { ok: res.ok, status: res.status, body };
       },
       delete: async (id) => {
-        const res = await fetch(`/member/${encodeURIComponent(id)}`, {
+        const res = await fetch(`/members/${encodeURIComponent(id)}`, {
           method: 'DELETE',
           credentials: 'same-origin',
           headers: { 'Accept':'application/json', 'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '' }
@@ -612,7 +775,7 @@
 
     function buildExportUrl(fmt){
       const p = new URLSearchParams(); if (state.q) p.set('q', state.q); if (state.sort) p.append('sortBy', state.sort); if (state.dir)  p.set('dir', state.dir);
-      return `/member/export?format=${fmt}&` + p.toString();
+      return `/members/export?format=${fmt}&` + p.toString();
     }
     document.getElementById('downloadCsvBtn').addEventListener('click', () => { window.location.href = buildExportUrl('csv'); });
     document.getElementById('downloadXlsxBtn').addEventListener('click', () => { window.location.href = buildExportUrl('xlsx'); });

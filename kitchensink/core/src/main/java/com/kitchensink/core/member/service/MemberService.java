@@ -87,7 +87,7 @@ public class MemberService {
         memberRepository.deleteById(id);
     }
 
-    private Member getMemberInfo(final String memberId) {
+    public Member getMemberInfo(final String memberId) {
         return memberRepository.findById(memberId).orElseThrow(() -> new NotFoundException("Member not found"));
     }
 

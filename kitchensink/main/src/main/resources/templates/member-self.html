@@ -127,6 +127,9 @@
     <!-- flash / query messages -->
     <div th:if="${param.pwdReset}" class="alert ok"><strong>Password updated successfully.</strong></div>
     <div th:if="${msg}" class="alert ok"><strong th:text="${msg}">Saved.</strong></div>
+    <div th:if="${param.msg}" class="alert ok">
+        <strong th:text="${param.msg}">Saved.</strong>
+    </div>
     <div th:if="${param.error}" class="alert err"><strong th:text="${param.error}">Something went wrong.</strong></div>
 
     <section class="card">
@@ -422,7 +425,11 @@ function clearAllErrors() {
       if (res.ok) {
         // success — choose one:
         // 1) reload to show updated values
-        window.location.reload();
+        const message = 'Your changes were submitted and are pending admin approval.';
+  // keep this in sync with your controller mapping:
+  // if you later switch to plural, change to '/members/me'
+  const basePath = '/member/me';
+  window.location.href = `${basePath}?msg=${encodeURIComponent(message)}`;
         // 2) OR close modal & show a success message on the page (uncomment if you prefer)
         // closeModal();
         // msg.className = 'muted';

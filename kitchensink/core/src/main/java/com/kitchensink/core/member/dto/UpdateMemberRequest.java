@@ -12,6 +12,8 @@ public record UpdateMemberRequest(
         @NotBlank
         @Email
         @Size(min = 5, max = 254)
+        @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+                message = "Invalid email format")
         String email,
 
         // Accept +91, 91 or 10-digit; will normalize to +91XXXXXXXXXX

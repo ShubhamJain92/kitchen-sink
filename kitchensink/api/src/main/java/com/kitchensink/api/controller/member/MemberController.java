@@ -21,7 +21,7 @@ import static org.springframework.http.ResponseEntity.*;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/member")
+@RequestMapping("/members")
 public class MemberController {
 
     private final MemberService memberService;
@@ -33,7 +33,6 @@ public class MemberController {
      * Returns 201 Created with `Location: /member/{id}` and a simple response payload.
      */
     @PostMapping(
-            value = "/register",
             consumes = APPLICATION_JSON_VALUE,
             produces = APPLICATION_JSON_VALUE
     )
@@ -58,6 +57,11 @@ public class MemberController {
         return ok(responseDTO);
     }
 
+    @GetMapping(path = "/{id}", produces = APPLICATION_JSON_VALUE)
+    public Member lookupMemberById(@PathVariable final String id) {
+        return memberService.getMemberInfo(id);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable final String id) {
         memberService.delete(id);
@@ -72,7 +76,7 @@ public class MemberController {
 
     @GetMapping("/export")
     public void export(@RequestParam(defaultValue = FORMAT_CSV) final String format,
-                       @ModelAttribute final MemberFilterRequest filterRequest,
+                       @Valid @ModelAttribute final MemberFilterRequest filterRequest,
                        final HttpServletResponse httpServletResponse) throws IOException {
         if (FORMAT_XLSX.equalsIgnoreCase(format)) {
             exportService.exportXlsx(filterRequest, httpServletResponse);

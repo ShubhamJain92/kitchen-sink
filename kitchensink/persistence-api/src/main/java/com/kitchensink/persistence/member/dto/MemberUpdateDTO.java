@@ -14,6 +14,8 @@ public record MemberUpdateDTO(
         )
         String name,
         @Email
+        @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+                message = "Invalid email format")
         String email,
         @Pattern(
                 regexp = "^(?:\\+91[- ]?|0)?[6-9]\\d{9}$",

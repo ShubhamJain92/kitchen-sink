@@ -235,7 +235,7 @@ class EmailServiceTest {
 
             var msg = msgCap.getValue();
             assertThat(toList(msg)).containsExactly("alice@example.com");
-            assertThat(subjectOf(msg)).isEqualTo("Your profile update was approved");
+            assertThat(subjectOf(msg)).isEqualTo("Your profile update request is approved");
             var html = bodyOf(msg);
             // should contain rows for Phone & Place only
             assertThat(html).contains("Phone");

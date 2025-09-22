@@ -21,6 +21,8 @@ public record CreateMemberRequestDTO(
         String name,
         @NotBlank
         @Email
+        @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+                message = "Invalid email format")
         String email,
         @NotBlank(message = "Phone number is required")
         @Pattern(
