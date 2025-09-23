@@ -19,7 +19,6 @@ spring:
 app:
   mail:
     from: "no-reply@kitchensink.com"
-    notifyMode: REPO          # or STATIC
     approveBaseUrl: "http://localhost:8080"
     loginUrl: "http://localhost:8080/auth/login"
   admin:

@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -143,19 +142,16 @@ public class SecurityConfig {
                                 "/css/**", "/js/**", "/assets/**", "/default-ui.css").permitAll()
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/auth/admin-gate").permitAll()
-                        //.requestMatchers("/member/register").authenticated()
                         .requestMatchers("/reset-password", "/reset-password/**").authenticated()
-                        .requestMatchers("/index.html").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/member/register").permitAll() // TEMP: for bootstrap only
+                        .requestMatchers("/index.html").hasAuthority("ADMIN")
                         .requestMatchers("/member/me/**").hasAuthority("MEMBER")
-                        .requestMatchers("/member", "/member/**", "/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/members", "/members/**", "/admin/**").hasAuthority("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login").permitAll()  // use our template
                         .loginProcessingUrl("/login")
                         .successHandler(loginSuccessHandler())
-                        //.defaultSuccessUrl("/index.html", true)
                         .permitAll()
                 )
                 .logout(l -> l
@@ -172,7 +168,6 @@ public class SecurityConfig {
                     String loc = "/login?reauth=1&redirect=" + URLEncoder.encode(full, UTF_8);
                     res.sendRedirect(loc);
                 }));
-        //.sessionManagement(sm -> sm.sessionCreationPolicy(ALWAYS))
         return http.build();
     }
 }
