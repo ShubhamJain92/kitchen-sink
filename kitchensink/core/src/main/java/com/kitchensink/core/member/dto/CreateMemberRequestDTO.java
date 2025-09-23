@@ -1,10 +1,7 @@
 package com.kitchensink.core.member.dto;
 
 import com.kitchensink.persistence.member.model.Member;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Builder;
 
 import static java.time.LocalDate.now;
@@ -30,6 +27,8 @@ public record CreateMemberRequestDTO(
                 message = "Enter a valid Indian mobile number (10 digits starting 6–9)."
         )
         String phoneNumber,
+        @Min(value = 1, message = "Age must be at least {value}")
+        @Max(value = 120, message = "Age must not exceed {value}")
         int age,
         @NotBlank(message = "Place is required")
         @Size(max = 50, message = "Place can be of at most 50 characters")

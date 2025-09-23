@@ -1,8 +1,6 @@
 package com.kitchensink.persistence.member.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public record MemberUpdateDTO(
 
@@ -22,6 +20,8 @@ public record MemberUpdateDTO(
                 message = "Enter a valid Indian mobile number (10 digits starting 6–9). Optional +91 or leading 0 allowed."
         )
         String phoneNumber,
+        @Min(value = 1, message = "Age must be at least {value}")
+        @Max(value = 120, message = "Age must not exceed {value}")
         int age,
         @Size(max = 50, message = "Place must be at most 50 characters")
         @Pattern(

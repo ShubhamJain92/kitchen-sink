@@ -47,22 +47,22 @@ public class MemberQueryService {
         final List<Criteria> criteriaList = new ArrayList<>();
 
         // --- Free-text query over text fields only; optionally match exact LocalDate if query parses
+        buildCriteriaList(filterRequest, criteriaList, query);
+
+        final var total = mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Member.class);
+        final var content = mongoTemplate.find(query, Member.class);
+        return new PageImpl<>(content, pageable, total);
+    }
+
+    private static void buildCriteriaList(final MemberFilterRequest filterRequest,
+                                          final List<Criteria> criteriaList,
+                                          final Query query) {
         if (hasText(filterRequest.getQ())) {
             final var term = filterRequest.getQ().trim();
-            final var rx = Pattern.quote(term);
+            final var regex = Pattern.quote(term);
 
-            List<Criteria> ors = new ArrayList<>();
-            ors.add(Criteria.where("name").regex(rx, "i"));
-            ors.add(Criteria.where("email").regex(rx, "i"));
-            ors.add(Criteria.where("phoneNumber").regex(rx, "i"));
-            ors.add(Criteria.where("place").regex(rx, "i"));
-
-            // if query looks like yyyy-MM-dd, include an exact date match
-            LocalDate parsed = tryParseLocalDate(term);
-            if (parsed != null) {
-                ors.add(Criteria.where("registrationDate").is(parsed));
-            }
-            criteriaList.add(new Criteria().orOperator(ors.toArray(Criteria[]::new)));
+            List<Criteria> criteria = buildCriteria(regex, term);
+            criteriaList.add(new Criteria().orOperator(criteria.toArray(Criteria[]::new)));
         }
 
         // --- Field-specific filters
@@ -92,9 +92,20 @@ public class MemberQueryService {
         if (!criteriaList.isEmpty()) {
             query.addCriteria(new Criteria().andOperator(criteriaList.toArray(Criteria[]::new)));
         }
+    }
 
-        final var total = mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Member.class);
-        final var content = mongoTemplate.find(query, Member.class);
-        return new PageImpl<>(content, pageable, total);
+    private static List<Criteria> buildCriteria(final String regex, final String term) {
+        List<Criteria> criteria = new ArrayList<>();
+        criteria.add(Criteria.where("name").regex(regex, "i"));
+        criteria.add(Criteria.where("email").regex(regex, "i"));
+        criteria.add(Criteria.where("phoneNumber").regex(regex, "i"));
+        criteria.add(Criteria.where("place").regex(regex, "i"));
+
+        // if query looks like yyyy-MM-dd, include an exact date match
+        LocalDate parsed = tryParseLocalDate(term);
+        if (parsed != null) {
+            criteria.add(Criteria.where("registrationDate").is(parsed));
+        }
+        return criteria;
     }
 }

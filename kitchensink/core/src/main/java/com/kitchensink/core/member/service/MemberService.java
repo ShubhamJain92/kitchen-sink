@@ -79,12 +79,12 @@ public class MemberService {
     }
 
     @Transactional
-    public void delete(final String id) {
-        deleteUserByMemberId(id);
-        final var member = getMemberInfo(id);
+    public void delete(final String memberId) {
+        deleteUserByMemberId(memberId);
+        final var member = getMemberInfo(memberId);
         //notify members that their account is deleted
         emailService.notifyMemberDeleted(member.getEmail(), member.getName());
-        memberRepository.deleteById(id);
+        memberRepository.deleteById(memberId);
     }
 
     public Member getMemberInfo(final String memberId) {

@@ -10,14 +10,12 @@ import com.kitchensink.persistence.member.repo.MemberChangeRequestRepository;
 import com.kitchensink.persistence.member.repo.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import static com.kitchensink.persistence.common.dto.enums.ChangeType.DELETE;
 import static com.kitchensink.persistence.common.dto.enums.ChangeType.UPDATE;
-import static com.kitchensink.persistence.common.dto.enums.Status.PENDING;
 import static java.time.Instant.now;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -76,22 +74,20 @@ public class MemberChangeRequestService {
     @Transactional
     public void submitDeleteRequest(final String userEmail) {
         final var member = getMember(userEmail);
+        final var memberChangeRequest = getMemberChangeRequest(userEmail, member);
+        updateMemberBefore(memberChangeRequest, member);
+        saveMemberChangeRequest(memberChangeRequest);
+        emailService.notifyAdminDelete(member);
+    }
 
-        if (changeRequestRepository.existsByMemberIdAndStatus(member.getId(), PENDING)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "A pending request already exists.");
-        }
-
-        final var memberChangeRequest = MemberChangeRequest.builder()
+    private static MemberChangeRequest getMemberChangeRequest(final String userEmail, final Member member) {
+        return MemberChangeRequest.builder()
                 .memberId(member.getId())
                 .memberEmail(member.getEmail())
                 .type(DELETE)
                 .submittedBy(userEmail)
                 .submittedAt(now())
                 .build();
-
-        updateMemberBefore(memberChangeRequest, member);
-        saveMemberChangeRequest(memberChangeRequest);
-        emailService.notifyAdminDelete(member);
     }
 
     private boolean hasAnyChange(final Member member, final MemberUpdateDTO memberUpdateDTO) {
@@ -106,18 +102,17 @@ public class MemberChangeRequestService {
         changeRequestRepository.save(memberChangeRequest);
     }
 
-    public MemberResponseDTO findByEmail(String email) {
-        var m = memberRepo.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found"));
+    public MemberResponseDTO findByEmail(final String email) {
+        final var member = getMember(email);
         // map entity -> DTO (inline or via MapStruct)
         return MemberResponseDTO.builder()
-                .id(m.getId())
-                .name(m.getName())
-                .email(m.getEmail())
-                .phoneNumber(m.getPhoneNumber())
-                .age(m.getAge())
-                .place(m.getPlace())
-                .registrationDate(m.getRegistrationDate())
+                .id(member.getId())
+                .name(member.getName())
+                .email(member.getEmail())
+                .phoneNumber(member.getPhoneNumber())
+                .age(member.getAge())
+                .place(member.getPlace())
+                .registrationDate(member.getRegistrationDate())
                 .build();
     }
 

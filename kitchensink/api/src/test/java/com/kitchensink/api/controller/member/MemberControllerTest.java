@@ -72,7 +72,7 @@ class MemberControllerTest {
         when(memberService.registerMember(any(CreateMemberRequestDTO.class))).thenReturn(member);
 
         // when / then
-        mvc.perform(post("/member/register")
+        mvc.perform(post("/members")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isCreated())
@@ -95,7 +95,7 @@ class MemberControllerTest {
         given(memberService.update(eq(id), any(UpdateMemberRequest.class))).willReturn(resp);
 
         //when //then
-        mvc.perform(put("/member/{id}", id)
+        mvc.perform(put("/members/{id}", id)
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
@@ -114,7 +114,7 @@ class MemberControllerTest {
         willDoNothing().given(memberService).delete(id);
 
         //when //then
-        mvc.perform(delete("/member/{id}", id)).andExpect(status().isNoContent());
+        mvc.perform(delete("/members/{id}", id)).andExpect(status().isNoContent());
 
         then(memberService).should().delete(id);
     }
@@ -137,7 +137,7 @@ class MemberControllerTest {
         var page = new org.springframework.data.domain.PageImpl<>(List.of(m));
         given(memberQueryService.searchMembers(any(MemberFilterRequest.class))).willReturn(page);
 
-        mvc.perform(post("/member/search")
+        mvc.perform(post("/members/search")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(filter)))
                 .andExpect(status().isOk())
@@ -154,7 +154,7 @@ class MemberControllerTest {
         willDoNothing().given(exportService)
                 .exportCsv(any(MemberFilterRequest.class), any(MockHttpServletResponse.class));
 
-        mvc.perform(get("/member/export").param("format", "csv"))
+        mvc.perform(get("/members/export").param("format", "csv"))
                 .andExpect(status().isOk()); // servlet writes to response; status defaults to 200
 
         then(exportService).should()
@@ -169,7 +169,7 @@ class MemberControllerTest {
         willDoNothing().given(exportService)
                 .exportXlsx(any(MemberFilterRequest.class), any(MockHttpServletResponse.class));
 
-        mvc.perform(get("/member/export").param("format", "xlsx"))
+        mvc.perform(get("/members/export").param("format", "xlsx"))
                 .andExpect(status().isOk());
 
         then(exportService).should()

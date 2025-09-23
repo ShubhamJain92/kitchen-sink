@@ -8,6 +8,7 @@ import com.kitchensink.persistence.member.model.Member;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +23,7 @@ import static org.springframework.http.ResponseEntity.*;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/members")
+@Slf4j
 public class MemberController {
 
     private final MemberService memberService;
@@ -39,6 +41,7 @@ public class MemberController {
     public ResponseEntity<CreateMemberResponseDTO> registerMember(
             @Valid @RequestBody final CreateMemberRequestDTO createMemberRequestDTO
     ) {
+        log.info("registering member with request: {}", createMemberRequestDTO);
         final var member = memberService.registerMember(createMemberRequestDTO);
         final var memberResponseDTO = getMemberResponseDTO(member);
         return created(buildMemberLocation(member.getId())).body(memberResponseDTO);
@@ -53,17 +56,20 @@ public class MemberController {
             @PathVariable final String id,
             @Valid @RequestBody final UpdateMemberRequest updateMemberRequest
     ) {
+        log.info("updating member details with request: {}", updateMemberRequest);
         final var responseDTO = memberService.update(id, updateMemberRequest);
         return ok(responseDTO);
     }
 
     @GetMapping(path = "/{id}", produces = APPLICATION_JSON_VALUE)
     public Member lookupMemberById(@PathVariable final String id) {
+        log.info("fetching member details..");
         return memberService.getMemberInfo(id);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable final String id) {
+        log.info("deleting member with id: {}", id);
         memberService.delete(id);
         return noContent().build();
     }
@@ -78,6 +84,7 @@ public class MemberController {
     public void export(@RequestParam(defaultValue = FORMAT_CSV) final String format,
                        @Valid @ModelAttribute final MemberFilterRequest filterRequest,
                        final HttpServletResponse httpServletResponse) throws IOException {
+        log.info("exporting member report");
         if (FORMAT_XLSX.equalsIgnoreCase(format)) {
             exportService.exportXlsx(filterRequest, httpServletResponse);
         } else {
