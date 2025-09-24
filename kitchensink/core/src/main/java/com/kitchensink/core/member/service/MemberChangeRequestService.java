@@ -1,7 +1,7 @@
 package com.kitchensink.core.member.service;
 
 import com.kitchensink.core.member.dto.MemberResponseDTO;
-import com.kitchensink.core.notification.email.service.EmailService;
+import com.kitchensink.core.notification.email.service.impl.SmtpEmailService;
 import com.kitchensink.persistence.member.dto.MemberSnapshot;
 import com.kitchensink.persistence.member.dto.MemberUpdateDTO;
 import com.kitchensink.persistence.member.model.Member;
@@ -27,7 +27,7 @@ public class MemberChangeRequestService {
 
     private final MemberRepository memberRepo;
     private final MemberChangeRequestRepository changeRequestRepository;
-    private final EmailService emailService;
+    private final SmtpEmailService emailService;
 
     private static void updateMemberBefore(final MemberChangeRequest memberChangeRequest, final Member member) {
         memberChangeRequest.setBefore(new MemberSnapshot(
@@ -67,7 +67,7 @@ public class MemberChangeRequestService {
             emailService.notifyAdminUpdate(member, memberUpdateDTO);
         } catch (Exception e) {
             log.error("error occurred while notify submit profile update:{}", e.getMessage(), e);
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
     }
 
@@ -93,7 +93,7 @@ public class MemberChangeRequestService {
     private boolean hasAnyChange(final Member member, final MemberUpdateDTO memberUpdateDTO) {
         return (memberUpdateDTO.name() != null && !memberUpdateDTO.name().equals(member.getName())) ||
                 (memberUpdateDTO.phoneNumber() != null && !memberUpdateDTO.phoneNumber().equals(member.getPhoneNumber())) ||
-                (memberUpdateDTO.age() != 0 && memberUpdateDTO.age() != member.getAge()) ||
+                (memberUpdateDTO.age() != member.getAge()) ||
                 (memberUpdateDTO.place() != null && !memberUpdateDTO.place().equals(member.getPlace())) ||
                 (memberUpdateDTO.email() != null && !memberUpdateDTO.email().equalsIgnoreCase(member.getEmail()));
     }

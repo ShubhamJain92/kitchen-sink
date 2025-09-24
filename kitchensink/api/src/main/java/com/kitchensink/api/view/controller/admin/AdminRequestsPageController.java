@@ -1,4 +1,4 @@
-package com.kitchensink.api.controller.admin;
+package com.kitchensink.api.view.controller.admin;
 
 import com.kitchensink.persistence.member.repo.MemberChangeRequestRepository;
 import lombok.RequiredArgsConstructor;

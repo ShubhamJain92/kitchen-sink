@@ -43,10 +43,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-rest</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 		<dependency>
@@ -78,10 +74,6 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>0.11.5</version>
             <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -181,12 +173,11 @@
                         <configuration>
                             <excludes>
                                 <!-- exclude your own packages -->
-                                <exclude>com/quickstarts/kitchensink/config/**</exclude>
-                                <exclude>com/quickstarts/kitchensink/model/**</exclude>
-                                <exclude>com/quickstarts/kitchensink/dto/**</exclude>
-                                <exclude>com/quickstarts/kitchensink/exception/**</exclude>
-                                <exclude>com/quickstarts/kitchensink/constants/**</exclude>
-                                <exclude>com/quickstarts/kitchensink/repo/**</exclude>
+                                <exclude>com/kitchensink/api/exception/**</exclude>
+                                <exclude>com/kitchensink/core/member/dto/**</exclude>
+                                <exclude>com/kitchensink/core/auth/dto/**</exclude>
+                                <exclude>com/kitchensink/core/user/dto/**</exclude>
+                                <exclude>com/kitchensink/core/exception/**</exclude>
                             </excludes>
                         </configuration>
                     </execution>
@@ -204,15 +195,17 @@
                                     <element>BUNDLE</element>
                                     <limits>
                                         <limit>
-                                            <counter>LINE</counter>
+                                            <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>0.80</minimum>
                                         </limit>
                                     </limits>
                                     <excludes>
-                                        <exclude>com/quickstarts/kitchensink/config/**</exclude>
-                                        <exclude>com/quickstarts/kitchensink/model/**</exclude>
-                                        <exclude>com/quickstarts/kitchensink/dto/**</exclude>
+                                        <exclude>com/kitchensink/api/exception/**</exclude>
+                                        <exclude>com/kitchensink/core/member/dto/**</exclude>
+                                        <exclude>com/kitchensink/core/auth/dto/**</exclude>
+                                        <exclude>com/kitchensink/core/user/dto/**</exclude>
+                                        <exclude>com/kitchensink/core/exception/**</exclude>
                                     </excludes>
                                 </rule>
                             </rules>

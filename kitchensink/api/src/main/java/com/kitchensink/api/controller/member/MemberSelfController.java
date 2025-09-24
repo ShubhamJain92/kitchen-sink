@@ -5,6 +5,7 @@ import com.kitchensink.core.user.service.UserInfoUserDetails;
 import com.kitchensink.persistence.member.dto.MemberUpdateDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,6 +19,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/member/me")
+@PreAuthorize("hasAuthority('MEMBER')")
 public class MemberSelfController {
 
     private final MemberChangeRequestService changeService;

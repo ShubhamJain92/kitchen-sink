@@ -5,7 +5,7 @@ import com.kitchensink.core.exception.NotFoundException;
 import com.kitchensink.core.member.dto.CreateMemberRequestDTO;
 import com.kitchensink.core.member.dto.MemberResponseDTO;
 import com.kitchensink.core.member.dto.UpdateMemberRequest;
-import com.kitchensink.core.notification.email.service.EmailService;
+import com.kitchensink.core.notification.email.service.impl.SmtpEmailService;
 import com.kitchensink.persistence.member.model.Member;
 import com.kitchensink.persistence.member.repo.MemberRepository;
 import com.kitchensink.persistence.user.model.UserInfo;
@@ -45,7 +45,7 @@ class MemberServiceTest {
     private PasswordEncoder encoder;
 
     @Mock
-    private EmailService emailService;
+    private SmtpEmailService emailService;
 
     @InjectMocks
     private MemberService memberService;

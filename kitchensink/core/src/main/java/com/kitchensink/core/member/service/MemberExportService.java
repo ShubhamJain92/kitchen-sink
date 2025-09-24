@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static com.kitchensink.core.Constants.EXPORT_EXCEL_SHEET_CONTENT_TYPE;
+import static com.kitchensink.core.Constants.REGISTRATION_DATE;
 import static com.kitchensink.core.utils.MemberUtils.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.LocalDate.now;
@@ -41,15 +42,15 @@ public class MemberExportService {
         response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
 
         try (var out = response.getOutputStream();
-             var w = new BufferedWriter(new OutputStreamWriter(out, UTF_8));
+             var bufferedWriter = new BufferedWriter(new OutputStreamWriter(out, UTF_8));
              Stream<Member> stream = mongoTemplate.stream(query, Member.class)) {
 
             // header
-            w.write("Registration Date,Name,Email,Phone,Age,Place\n");
+            bufferedWriter.write("Registration Date,Name,Email,Phone,Age,Place\n");
 
-            stream.forEachOrdered(m -> {
+            stream.forEachOrdered(member -> {
                 try {
-                    writeCsvRow(w, m);
+                    writeCsvRow(bufferedWriter, member);
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
@@ -60,11 +61,9 @@ public class MemberExportService {
         }
     }
 
-
     /* ---------------- Query builder (no pagination) ---------------- */
-
     private void writeCsvRow(final Writer writer, final Member member) throws IOException {
-        final var cols = new String[]{
+        final var columns = new String[]{
                 formatDate(member.getRegistrationDate()),
                 emptyIfNull(member.getName()),
                 emptyIfNull(member.getEmail()),
@@ -72,12 +71,14 @@ public class MemberExportService {
                 (member.getAge() == 0 ? "" : String.valueOf(member.getAge())),
                 emptyIfNull(member.getPlace())
         };
-        for (int i = 0; i < cols.length; i++) {
-            String v = cols[i].replace("\"", "\"\"");
+        for (int i = 0; i < columns.length; i++) {
+            String v = columns[i].replace("\"", "\"\"");
             writer.write('"');
             writer.write(v);
             writer.write('"');
-            if (i < cols.length - 1) writer.write(',');
+            if (i < columns.length - 1) {
+                writer.write(',');
+            }
         }
         writer.write('\n');
     }
@@ -96,27 +97,31 @@ public class MemberExportService {
             String[] heads = {"Registration Date", "Name", "Email", "Phone", "Age", "Place"};
 
             var header = workbookSheet.createRow(r++);
-            for (int c = 0; c < heads.length; c++) header.createCell(c).setCellValue(heads[c]);
+            for (int c = 0; c < heads.length; c++) {
+                header.createCell(c).setCellValue(heads[c]);
+            }
 
             try (Stream<Member> stream = mongoTemplate.stream(query, Member.class)) {
                 final int[] rowIdx = {r};
                 stream.forEachOrdered(m -> {
                     var row = workbookSheet.createRow(rowIdx[0]++);
-                    int c = 0;
-                    row.createCell(c++).setCellValue(formatDate(m.getRegistrationDate()));
-                    row.createCell(c++).setCellValue(emptyIfNull(m.getName()));
-                    row.createCell(c++).setCellValue(emptyIfNull(m.getEmail()));
-                    row.createCell(c++).setCellValue(emptyIfNull(m.getPhoneNumber()));
-                    row.createCell(c++).setCellValue(m.getAge()); // numeric is fine
-                    row.createCell(c++).setCellValue(emptyIfNull(m.getPlace()));
+                    int cell = 0;
+                    row.createCell(cell++).setCellValue(formatDate(m.getRegistrationDate()));
+                    row.createCell(cell++).setCellValue(emptyIfNull(m.getName()));
+                    row.createCell(cell++).setCellValue(emptyIfNull(m.getEmail()));
+                    row.createCell(cell++).setCellValue(emptyIfNull(m.getPhoneNumber()));
+                    row.createCell(cell++).setCellValue(m.getAge());
+                    row.createCell(cell++).setCellValue(emptyIfNull(m.getPlace()));
                 });
             }
 
             // Now it's legal to auto-size tracked columns
-            for (int c = 0; c < heads.length; c++) workbookSheet.autoSizeColumn(c);
+            for (int c = 0; c < heads.length; c++) {
+                workbookSheet.autoSizeColumn(c);
+            }
 
-            try (var os = httpServletResponse.getOutputStream()) {
-                workbook.write(os);
+            try (var outputStream = httpServletResponse.getOutputStream()) {
+                workbook.write(outputStream);
             }
             workbook.dispose(); // cleanup temp files
         }
@@ -124,19 +129,26 @@ public class MemberExportService {
 
     private Query buildQueryForExport(final MemberFilterRequest filterRequest) {
         // sort whitelist
-        var allowed = of("name", "email", "phoneNumber", "age", "place", "registrationDate");
-        var sortFields = (filterRequest.getSortBy() == null || filterRequest.getSortBy().isEmpty() ? List.of("registrationDate") : filterRequest.getSortBy())
+        var allowed = of("name", "email", "phoneNumber", "age", "place", REGISTRATION_DATE);
+        var sortFields = (filterRequest.getSortBy() == null || filterRequest.getSortBy().isEmpty() ? List.of(REGISTRATION_DATE) : filterRequest.getSortBy())
                 .stream().filter(allowed::contains).toList();
         var dir = "desc".equalsIgnoreCase(filterRequest.getDir()) ? DESC : ASC;
         var sort = Sort.by(sortFields.stream().map(fn -> new Sort.Order(dir, fn)).toList());
 
-        var q = new Query().with(sort);
-        var ands = new ArrayList<Criteria>();
+        var query = new Query().with(sort);
+        var criteria = new ArrayList<Criteria>();
 
-        // q over text fields (name/email/phone/place); registrationDate is LocalDate so skip here
+        buildCriteria(filterRequest, criteria, query);
+        return query;
+    }
+
+    private static void buildCriteria(final MemberFilterRequest filterRequest,
+                                      final ArrayList<Criteria> criteria,
+                                      final Query query) {
+        // query over text fields (name/email/phone/place); registrationDate is LocalDate so skip here
         if (hasText(filterRequest.getQ())) {
-            String rx = Pattern.quote(filterRequest.getQ().trim());
-            ands.add(new Criteria().orOperator(
+            var rx = Pattern.quote(filterRequest.getQ().trim());
+            criteria.add(new Criteria().orOperator(
                     Criteria.where("name").regex(rx, "i"),
                     Criteria.where("email").regex(rx, "i"),
                     Criteria.where("phoneNumber").regex(rx, "i"),
@@ -145,27 +157,26 @@ public class MemberExportService {
         }
 
         if (hasText(filterRequest.getName()))
-            ands.add(Criteria.where("name").regex(Pattern.quote(filterRequest.getName().trim()), "i"));
+            criteria.add(Criteria.where("name").regex(Pattern.quote(filterRequest.getName().trim()), "i"));
         if (hasText(filterRequest.getEmail()))
-            ands.add(Criteria.where("email").regex(Pattern.quote(filterRequest.getEmail().trim()), "i"));
+            criteria.add(Criteria.where("email").regex(Pattern.quote(filterRequest.getEmail().trim()), "i"));
         if (hasText(filterRequest.getPhoneNumber()))
-            ands.add(Criteria.where("phoneNumber").regex(Pattern.quote(filterRequest.getPhoneNumber().trim()), "i"));
+            criteria.add(Criteria.where("phoneNumber").regex(Pattern.quote(filterRequest.getPhoneNumber().trim()), "i"));
         if (hasText(filterRequest.getPlace()))
-            ands.add(Criteria.where("place").regex(Pattern.quote(filterRequest.getPlace().trim()), "i"));
-        if (filterRequest.getAgeMin() != 0) ands.add(Criteria.where("age").gte(filterRequest.getAgeMin()));
-        if (filterRequest.getAgeMax() != 0) ands.add(Criteria.where("age").lte(filterRequest.getAgeMax()));
+            criteria.add(Criteria.where("place").regex(Pattern.quote(filterRequest.getPlace().trim()), "i"));
+        if (filterRequest.getAgeMin() != 0) criteria.add(Criteria.where("age").gte(filterRequest.getAgeMin()));
+        if (filterRequest.getAgeMax() != 0) criteria.add(Criteria.where("age").lte(filterRequest.getAgeMax()));
 
         // LocalDate filters: exact / from / to
         if (filterRequest.getRegistrationDate() != null) {
-            ands.add(Criteria.where("registrationDate").is(filterRequest.getRegistrationDate()));
+            criteria.add(Criteria.where(REGISTRATION_DATE).is(filterRequest.getRegistrationDate()));
         } else {
             if (filterRequest.getRegistrationDateFrom() != null)
-                ands.add(Criteria.where("registrationDate").gte(filterRequest.getRegistrationDateFrom()));
+                criteria.add(Criteria.where(REGISTRATION_DATE).gte(filterRequest.getRegistrationDateFrom()));
             if (filterRequest.getRegistrationDateTo() != null)
-                ands.add(Criteria.where("registrationDate").lte(filterRequest.getRegistrationDateTo()));
+                criteria.add(Criteria.where(REGISTRATION_DATE).lte(filterRequest.getRegistrationDateTo()));
         }
 
-        if (!ands.isEmpty()) q.addCriteria(new Criteria().andOperator(ands.toArray(Criteria[]::new)));
-        return q;
+        if (!criteria.isEmpty()) query.addCriteria(new Criteria().andOperator(criteria.toArray(Criteria[]::new)));
     }
 }

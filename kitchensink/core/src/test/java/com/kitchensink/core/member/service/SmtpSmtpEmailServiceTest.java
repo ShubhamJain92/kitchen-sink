@@ -1,7 +1,7 @@
 package com.kitchensink.core.member.service;
 
 import com.kitchensink.core.notification.email.service.EmailProperties;
-import com.kitchensink.core.notification.email.service.EmailService;
+import com.kitchensink.core.notification.email.service.impl.SmtpEmailService;
 import com.kitchensink.persistence.member.dto.MemberSnapshot;
 import com.kitchensink.persistence.member.dto.MemberUpdateDTO;
 import com.kitchensink.persistence.member.model.Member;
@@ -35,7 +35,7 @@ import static org.mockito.quality.Strictness.LENIENT;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = LENIENT)
-class EmailServiceTest {
+class SmtpSmtpEmailServiceTest {
 
     @Mock
     private JavaMailSender mailSender;
@@ -43,7 +43,7 @@ class EmailServiceTest {
     private EmailProperties emailProps;
 
     @InjectMocks
-    private EmailService service;
+    private SmtpEmailService service;
 
     // We’ll use a real JavaMailSenderImpl only to create MimeMessage instances
     private JavaMailSenderImpl realSender;
@@ -260,11 +260,11 @@ class EmailServiceTest {
             ArgumentCaptor<MimeMessage> msgCap = ArgumentCaptor.forClass(MimeMessage.class);
             doNothing().when(mailSender).send(msgCap.capture());
 
-            service.notifyMemberRejected("user@example.com", "Profile data could not be verified");
+            service.notifyMemberRejected("user@example.com", "Profile data could not be verified", "Bob");
 
             var msg = msgCap.getValue();
             assertThat(toList(msg)).containsExactly("user@example.com");
-            assertThat(subjectOf(msg)).isEqualTo("Your request was rejected");
+            assertThat(subjectOf(msg)).isEqualTo("Your request is rejected");
             var html = bodyOf(msg);
             assertThat(html).contains("Reason: Profile data could not be verified");
         }
@@ -275,7 +275,7 @@ class EmailServiceTest {
             ArgumentCaptor<MimeMessage> msgCap = ArgumentCaptor.forClass(MimeMessage.class);
             doNothing().when(mailSender).send(msgCap.capture());
 
-            service.notifyMemberRejected("user@example.com", "   ");
+            service.notifyMemberRejected("user@example.com", "   ", "Bob");
 
             var msg = msgCap.getValue();
             var html = bodyOf(msg);

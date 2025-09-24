@@ -1,7 +1,7 @@
 package com.kitchensink.core.member.service;
 
 import com.kitchensink.core.member.dto.MemberResponseDTO;
-import com.kitchensink.core.notification.email.service.EmailService;
+import com.kitchensink.core.notification.email.service.impl.SmtpEmailService;
 import com.kitchensink.persistence.member.dto.MemberSnapshot;
 import com.kitchensink.persistence.member.dto.MemberUpdateDTO;
 import com.kitchensink.persistence.member.model.Member;
@@ -39,7 +39,7 @@ class MemberChangeRequestServiceTest {
     @Mock
     private MemberChangeRequestRepository changeRequestRepository;
     @Mock
-    private EmailService emailService;
+    private SmtpEmailService emailService;
 
     @InjectMocks
     private MemberChangeRequestService service;

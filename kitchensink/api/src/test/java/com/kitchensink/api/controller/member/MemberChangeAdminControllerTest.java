@@ -1,189 +1,88 @@
 package com.kitchensink.api.controller.member;
 
 import com.kitchensink.api.controller.admin.MemberChangeAdminController;
-import com.kitchensink.core.notification.email.service.EmailService;
-import com.kitchensink.persistence.common.dto.enums.ChangeType;
-import com.kitchensink.persistence.common.dto.enums.Status;
-import com.kitchensink.persistence.member.dto.MemberUpdateDTO;
-import com.kitchensink.persistence.member.model.Member;
-import com.kitchensink.persistence.member.model.MemberChangeRequest;
-import com.kitchensink.persistence.member.repo.MemberChangeRequestRepository;
-import com.kitchensink.persistence.member.repo.MemberRepository;
-import com.kitchensink.persistence.user.model.UserInfo;
-import com.kitchensink.persistence.user.repo.UserInfoRepository;
-import org.junit.jupiter.api.BeforeEach;
+import com.kitchensink.core.admin.service.ChangeRequestReviewService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.NoSuchElementException;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.http.HttpStatus.SEE_OTHER;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@WebMvcTest
+@ActiveProfiles("test")
+@Import(SpringSecConfig.class)
 @ExtendWith(MockitoExtension.class)
+@ContextConfiguration(classes = MemberChangeAdminController.class)
 class MemberChangeAdminControllerTest {
 
-    @Mock
-    private MemberChangeRequestRepository memberChangeRequestRepository;
+    @Autowired
+    private MockMvc mvc;
 
-    @Mock
-    private MemberRepository memberRepo;
+    @MockitoBean
+    private ChangeRequestReviewService changeRequestReviewService;
 
-    @Mock
-    private UserInfoRepository userRepo;
+    /* -------------------- APPROVE -------------------- */
 
-    @Mock
-    private EmailService emailService;
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void approve_asAdmin_returnsSeeOther_andCallsService() throws Exception {
+        mvc.perform(post("/admin/requests/{id}/approve", "abc123"))
+                .andExpect(status().isSeeOther())
+                .andExpect(header().string(HttpHeaders.LOCATION, "/admin/requests"));
 
-    @InjectMocks
-    private MemberChangeAdminController controller;
-
-    private MemberChangeRequest memberChangeRequest;
-    private Member member;
-    private UserInfo userInfo;
-    private MemberUpdateDTO memberUpdateDTO;
-    private static final String REQUEST_ID = "123";
-    private static final String MEMBER_ID = "456";
-    private static final String EMAIL = "test@example.com";
-    private static final String NEW_EMAIL = "new@example.com";
-
-    @BeforeEach
-    void setUp() {
-        memberUpdateDTO = new MemberUpdateDTO("Updated Name", NEW_EMAIL, "1234567890", 30, "New Place");
-
-        member = new Member();
-        member.setId(MEMBER_ID);
-        member.setEmail(EMAIL);
-        member.setName("Original Name");
-        member.setPhoneNumber("0987654321");
-        member.setAge(25);
-        member.setPlace("Original Place");
-
-        userInfo = new UserInfo();
-        userInfo.setUserName(EMAIL);
-
-        memberChangeRequest = new MemberChangeRequest();
-        memberChangeRequest.setId(REQUEST_ID);
-        memberChangeRequest.setMemberId(MEMBER_ID);
-        memberChangeRequest.setMemberEmail(EMAIL);
-        memberChangeRequest.setType(ChangeType.UPDATE);
-        memberChangeRequest.setStatus(Status.PENDING);
-        memberChangeRequest.setRequested(memberUpdateDTO);
+        verify(changeRequestReviewService).approve("abc123");
     }
 
     @Test
-    void approve_UpdateRequest_Pending_UpdatesMemberAndRedirects() {
-        // Arrange
-        when(memberChangeRequestRepository.findById(REQUEST_ID)).thenReturn(Optional.of(memberChangeRequest));
-        when(memberRepo.findById(MEMBER_ID)).thenReturn(Optional.of(member));
-        when(userRepo.findByUserName(EMAIL)).thenReturn(Optional.of(userInfo));
+    void approve_withoutAuth_forbidden_andDoesNotCallService() throws Exception {
+        mvc.perform(post("/admin/requests/{id}/approve", "abc123"))
+                .andExpect(status().isForbidden());
 
-        // Act
-        ResponseEntity<Void> response = controller.approve(REQUEST_ID);
+        verifyNoInteractions(changeRequestReviewService);
+    }
 
-        // Assert
-        assertEquals(SEE_OTHER, response.getStatusCode());
-        assertEquals("/admin/requests", response.getHeaders().getLocation().getPath());
-        verify(memberRepo).save(member);
-        verify(userRepo).save(userInfo);
-        verify(emailService).notifyMemberUpdateApproved(EMAIL, memberChangeRequest);
-        verify(memberChangeRequestRepository).save(memberChangeRequest);
-        assertEquals(Status.APPROVED, memberChangeRequest.getStatus());
-        assertEquals(NEW_EMAIL, member.getEmail());
-        assertEquals("Updated Name", member.getName());
-        assertEquals("1234567890", member.getPhoneNumber());
-        assertEquals(30, member.getAge());
-        assertEquals("New Place", member.getPlace());
-        assertEquals(NEW_EMAIL, userInfo.getUserName());
+    /* -------------------- REJECT -------------------- */
+
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void reject_asAdmin_withReason_returnsSeeOther_andCallsService() throws Exception {
+        mvc.perform(post("/admin/requests/{id}/reject", "xyz789")
+                        .param("reason", "Incomplete details"))
+                .andExpect(status().is(SEE_OTHER.value()))
+                .andExpect(header().string(HttpHeaders.LOCATION, "/admin/requests"));
+
+        verify(changeRequestReviewService).reject("xyz789", "Incomplete details");
     }
 
     @Test
-    void approve_DeleteRequest_Pending_DeletesMemberAndRedirects() {
-        // Arrange
-        memberChangeRequest.setType(ChangeType.DELETE);
-        when(memberChangeRequestRepository.findById(REQUEST_ID)).thenReturn(Optional.of(memberChangeRequest));
-        when(memberRepo.findById(MEMBER_ID)).thenReturn(Optional.of(member));
-        when(userRepo.findByUserName(EMAIL)).thenReturn(Optional.of(userInfo));
+    @WithMockUser(authorities = "ADMIN")
+    void reject_asAdmin_withoutReason_returnsSeeOther_andCallsServiceWithNullReason() throws Exception {
+        mvc.perform(post("/admin/requests/{id}/reject", "xyz789"))
+                .andExpect(status().isSeeOther())
+                .andExpect(header().string(HttpHeaders.LOCATION, "/admin/requests"));
 
-        // Act
-        ResponseEntity<Void> response = controller.approve(REQUEST_ID);
-
-        // Assert
-        assertEquals(SEE_OTHER, response.getStatusCode());
-        assertEquals("/admin/requests", response.getHeaders().getLocation().getPath());
-        verify(emailService).notifyMemberDeleteApproved(EMAIL, member.getName());
-        verify(userRepo).delete(userInfo);
-        verify(memberRepo).deleteById(MEMBER_ID);
-        verify(memberChangeRequestRepository).save(memberChangeRequest);
-        assertEquals(Status.APPROVED, memberChangeRequest.getStatus());
+        verify(changeRequestReviewService).reject("xyz789", null);
     }
 
     @Test
-    void approve_NonPendingRequest_ThrowsConflictException() {
-        // Arrange
-        memberChangeRequest.setStatus(Status.APPROVED);
-        when(memberChangeRequestRepository.findById(REQUEST_ID)).thenReturn(Optional.of(memberChangeRequest));
+    void reject_withoutAuth_forbidden_andDoesNotCallService() throws Exception {
+        mvc.perform(post("/admin/requests/{id}/reject", "xyz789"))
+                .andExpect(status().isForbidden());
 
-        // Act & Assert
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-                () -> controller.approve(REQUEST_ID));
-        assertEquals(CONFLICT, exception.getStatusCode());
-        assertEquals("Not pending", exception.getReason());
-        verify(memberRepo, never()).save(any());
-        verify(userRepo, never()).save(any());
-        verify(emailService, never()).notifyMemberUpdateApproved(any(), any());
-        verify(memberChangeRequestRepository, never()).save(any());
-    }
-
-    @Test
-    void approve_RequestNotFound_ThrowsException() {
-        // Arrange
-        when(memberChangeRequestRepository.findById(REQUEST_ID)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(NoSuchElementException.class, () -> controller.approve(REQUEST_ID));
-        verify(memberRepo, never()).save(any());
-        verify(userRepo, never()).save(any());
-        verify(emailService, never()).notifyMemberUpdateApproved(any(), any());
-        verify(memberChangeRequestRepository, never()).save(any());
-    }
-
-    @Test
-    void reject_PendingRequest_RejectsAndRedirects() {
-        // Arrange
-        String reason = "Invalid data";
-        when(memberChangeRequestRepository.findById(REQUEST_ID)).thenReturn(Optional.of(memberChangeRequest));
-
-        // Act
-        ResponseEntity<Void> response = controller.reject(REQUEST_ID, reason);
-
-        // Assert
-        assertEquals(SEE_OTHER, response.getStatusCode());
-        assertEquals("/admin/requests", response.getHeaders().getLocation().getPath());
-        verify(emailService).notifyMemberRejected(EMAIL, reason);
-        verify(memberChangeRequestRepository).save(memberChangeRequest);
-        assertEquals(Status.REJECTED, memberChangeRequest.getStatus());
-        assertEquals(reason, memberChangeRequest.getRejectionReason());
-    }
-
-    @Test
-    void reject_RequestNotFound_ThrowsException() {
-        // Arrange
-        when(memberChangeRequestRepository.findById(REQUEST_ID)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(NoSuchElementException.class, () -> controller.reject(REQUEST_ID, null));
-        verify(emailService, never()).notifyMemberRejected(any(), any());
-        verify(memberChangeRequestRepository, never()).save(any());
+        verifyNoInteractions(changeRequestReviewService);
     }
 }

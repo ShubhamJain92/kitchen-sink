@@ -1,10 +1,10 @@
 package com.kitchensink.api.controller.member;
 
+import com.kitchensink.core.member.dto.MemberResponseDTO;
 import com.kitchensink.core.member.service.MemberChangeRequestService;
 import com.kitchensink.core.user.service.UserInfoUserDetails;
 import com.kitchensink.persistence.member.dto.MemberUpdateDTO;
 import com.kitchensink.persistence.member.model.Member;
-import com.kitchensink.persistence.member.repo.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,8 +16,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,9 +23,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MemberSelfControllerTest {
-
-    @Mock
-    private MemberRepository memberRepo;
 
     @Mock
     private MemberChangeRequestService changeService;
@@ -44,17 +39,15 @@ class MemberSelfControllerTest {
     @InjectMocks
     private MemberSelfController controller;
 
-    private Member member;
     private MemberUpdateDTO memberUpdateDTO;
     private static final String USERNAME = "test@example.com";
 
     @BeforeEach
     void setUp() {
-        member = new Member();
+        Member member = new Member();
         member.setEmail(USERNAME);
         member.setName("Test User");
         member.setPhoneNumber("1234567890");
-
         memberUpdateDTO = new MemberUpdateDTO("Updated Name", "email", "56498412", 55, "delhi");
     }
 
@@ -62,29 +55,39 @@ class MemberSelfControllerTest {
     void viewMe_MemberFound_ReturnsMemberSelfView() {
         // Arrange
         when(userDetails.getUsername()).thenReturn(USERNAME);
-        when(memberRepo.findByEmail(USERNAME)).thenReturn(Optional.of(member));
+        final var memberResponseDTO = getMemberResponseDTO();
+        when(changeService.findByEmail(USERNAME)).thenReturn(memberResponseDTO);
 
         // Act
         String viewName = controller.viewMe(userDetails, model);
 
         // Assert
         assertEquals("member-self", viewName);
-        verify(model).addAttribute("member", member);
-        verify(memberRepo).findByEmail(USERNAME);
+        verify(model).addAttribute("member", memberResponseDTO);
+        verify(changeService).findByEmail(USERNAME);
+    }
+
+    private static MemberResponseDTO getMemberResponseDTO() {
+        return MemberResponseDTO.builder()
+                .name("Test User")
+                .email(USERNAME)
+                .phoneNumber("1234567890")
+                .age(55)
+                .build();
     }
 
     @Test
     void viewMe_MemberNotFound_ThrowsNotFoundException() {
         // Arrange
         when(userDetails.getUsername()).thenReturn(USERNAME);
-        when(memberRepo.findByEmail(USERNAME)).thenReturn(Optional.empty());
+        when(changeService.findByEmail(USERNAME)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found"));
 
         // Act & Assert
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,
                 () -> controller.viewMe(userDetails, model));
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         assertEquals("Member not found", exception.getReason());
-        verify(memberRepo).findByEmail(USERNAME);
+        verify(changeService).findByEmail(USERNAME);
         verify(model, never()).addAttribute(any(), any());
     }
 

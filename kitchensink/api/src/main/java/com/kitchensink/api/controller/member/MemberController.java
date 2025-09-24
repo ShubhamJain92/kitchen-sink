@@ -5,11 +5,13 @@ import com.kitchensink.core.member.service.MemberExportService;
 import com.kitchensink.core.member.service.MemberQueryService;
 import com.kitchensink.core.member.service.MemberService;
 import com.kitchensink.persistence.member.model.Member;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -20,9 +22,11 @@ import static com.kitchensink.api.Constants.FORMAT_XLSX;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.*;
 
+@Tag(name = "Member Management", description = "Create, read, update, delete members")
 @RestController
 @AllArgsConstructor
 @RequestMapping("/members")
+@PreAuthorize("hasAuthority('ADMIN')")
 @Slf4j
 public class MemberController {
 

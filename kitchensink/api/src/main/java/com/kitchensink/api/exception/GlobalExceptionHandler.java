@@ -4,7 +4,6 @@ package com.kitchensink.api.exception;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -56,7 +55,6 @@ public class GlobalExceptionHandler {
         body.put("type", "about:blank");
         body.put("title", "Validation failed");
         body.put("status", 400);
-        //body.put("detail", "One or more fields are invalid.");
         body.put("instance", req.getRequestURI());
         body.put("timestamp", Instant.now());
         body.put("errors", errors);
@@ -64,26 +62,26 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MemberNotFoundException.class)
-    ResponseEntity<ProblemDetail> handleNotFound(MemberNotFoundException ex,
-                                                 ServletWebRequest req) {
-        var pd = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
-        pd.setTitle("Not Found");
-        pd.setDetail(ex.getMessage());
-        pd.setProperty("timestamp", Instant.now());
-        pd.setProperty("path", req.getRequest().getRequestURI());
-        return status(HttpStatus.NOT_FOUND).body(pd);
+    ResponseEntity<ProblemDetail> handleNotFound(final MemberNotFoundException ex,
+                                                 final ServletWebRequest req) {
+        var problemDetail = ProblemDetail.forStatus(NOT_FOUND);
+        problemDetail.setTitle("Not Found");
+        problemDetail.setDetail(ex.getMessage());
+        problemDetail.setProperty("timestamp", Instant.now());
+        problemDetail.setProperty("path", req.getRequest().getRequestURI());
+        return status(NOT_FOUND).body(problemDetail);
     }
 
     @ExceptionHandler(DuplicateEmailException.class)
     ResponseEntity<ProblemDetail> handleDuplicateEmail(DuplicateEmailException ex,
                                                        ServletWebRequest req) {
-        var pd = ProblemDetail.forStatus(CONFLICT);
-        pd.setTitle("Duplicate email");
-        pd.setDetail("Email already registered.");
-        pd.setProperty("timestamp", Instant.now());
-        pd.setProperty("path", req.getRequest().getRequestURI());
-        pd.setProperty("errors", Map.of("email", "Email taken"));
-        return status(CONFLICT).body(pd);
+        var problemDetail = ProblemDetail.forStatus(CONFLICT);
+        problemDetail.setTitle("Duplicate email");
+        problemDetail.setDetail("Email already registered.");
+        problemDetail.setProperty("timestamp", Instant.now());
+        problemDetail.setProperty("path", req.getRequest().getRequestURI());
+        problemDetail.setProperty("errors", Map.of("email", "Email taken"));
+        return status(CONFLICT).body(problemDetail);
     }
 
     /**
@@ -93,11 +91,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateKeyException.class)
     ResponseEntity<ProblemDetail> handleMongoDuplicate(DuplicateKeyException ex,
                                                        ServletWebRequest req) {
-        var pd = ProblemDetail.forStatus(CONFLICT);
-        pd.setTitle("Duplicate key");
-        pd.setDetail("A unique constraint was violated.");
-        pd.setProperty("timestamp", Instant.now());
-        pd.setProperty("path", req.getRequest().getRequestURI());
+        var problemDetail = ProblemDetail.forStatus(CONFLICT);
+        problemDetail.setTitle("Duplicate key");
+        problemDetail.setDetail("A unique constraint was violated.");
+        problemDetail.setProperty("timestamp", Instant.now());
+        problemDetail.setProperty("path", req.getRequest().getRequestURI());
         final var raw = getRawErrorMessage(ex);
         Map<String, String> errors = extractDupKeyFields(raw);
 
@@ -105,8 +103,8 @@ public class GlobalExceptionHandler {
             errors = Map.of("duplicate", "A record with the same unique field(s) already exists.");
         }
 
-        pd.setProperty("errors", errors);
-        return ResponseEntity.status(CONFLICT).body(pd);
+        problemDetail.setProperty("errors", errors);
+        return ResponseEntity.status(CONFLICT).body(problemDetail);
     }
 
     private static String getRawErrorMessage(DuplicateKeyException ex) {
@@ -116,12 +114,12 @@ public class GlobalExceptionHandler {
     }
 
     private static Map<String, String> extractDupKeyFields(String message) {
-        final Pattern p = Pattern.compile("dup key: \\{\\s*(.+?)\\s*\\}", CASE_INSENSITIVE);
-        final Matcher m = p.matcher(message == null ? "" : message);
+        final Pattern pattern = Pattern.compile("dup key: \\{\\s*(.+?)\\s*\\}", CASE_INSENSITIVE);
+        final Matcher matcher = pattern.matcher(message == null ? "" : message);
 
-        if (!m.find()) return Collections.emptyMap();
+        if (!matcher.find()) return Collections.emptyMap();
 
-        String keyPart = m.group(1); // e.g. phoneNumber: "+916321457899", email: "a@x.com"
+        String keyPart = matcher.group(1); // e.g. phoneNumber: "+916321457899", email: "a@x.com"
         Map<String, String> map = new LinkedHashMap<>();
 
         for (String kv : keyPart.split(",\\s*")) {
@@ -159,12 +157,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResponseStatusException.class)
     ResponseEntity<ProblemDetail> handleRSE(ResponseStatusException ex,
                                             ServletWebRequest req) {
-        var pd = ProblemDetail.forStatus(ex.getStatusCode());
-        pd.setTitle(ex.getReason() != null ? ex.getReason() : "Error");
-        pd.setDetail(ex.getMessage());
-        pd.setProperty("timestamp", Instant.now());
-        pd.setProperty("path", req.getRequest().getRequestURI());
-        return status(ex.getStatusCode()).body(pd);
+        var problemDetail = ProblemDetail.forStatus(ex.getStatusCode());
+        problemDetail.setTitle(ex.getReason() != null ? ex.getReason() : "Error");
+        problemDetail.setDetail(ex.getMessage());
+        problemDetail.setProperty("timestamp", Instant.now());
+        problemDetail.setProperty("path", req.getRequest().getRequestURI());
+        return status(ex.getStatusCode()).body(problemDetail);
     }
 
     @ExceptionHandler(Exception.class)
@@ -202,4 +200,3 @@ public class GlobalExceptionHandler {
         return status(INTERNAL_SERVER_ERROR).body(problemDetail);
     }
 }
-

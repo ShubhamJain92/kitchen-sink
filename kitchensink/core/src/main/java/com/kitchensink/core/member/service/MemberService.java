@@ -37,6 +37,21 @@ public class MemberService {
     @Value("${app.login.url:http://localhost:8080/login}")
     private String loginUrl;
 
+    private static Member getUpdatedMember(
+            final UpdateMemberRequest updateMemberRequest,
+            final Member member,
+            final String name,
+            final String email,
+            final String phoneNumber
+    ) {
+        member.setName(name);
+        member.setEmail(email);
+        member.setPhoneNumber(phoneNumber);
+        member.setAge(updateMemberRequest.age());
+        member.setPlace(updateMemberRequest.place().trim().replaceAll("\\s+", " "));
+        return member;
+    }
+
     @Transactional
     public Member registerMember(final CreateMemberRequestDTO createMemberRequestDTO) {
         final var member = to(createMemberRequestDTO);
@@ -104,12 +119,8 @@ public class MemberService {
         userInfoRepository.findByMemberId(memberId).ifPresent(user -> userInfoRepository.deleteById(user.getId()));
     }
 
-    private void notifyMemberWithWelcomeEmail(final CreateMemberRequestDTO createMemberRequestDTO,
-                                              final String tempPwd) {
-        emailService.sendWelcomeWithTempPassword(createMemberRequestDTO.email(), createMemberRequestDTO.name(),
-                tempPwd,
-                loginUrl
-        );
+    private void notifyMemberWithWelcomeEmail(final CreateMemberRequestDTO createMemberRequestDTO, final String tempPwd) {
+        emailService.sendWelcomeWithTempPassword(createMemberRequestDTO.email(), createMemberRequestDTO.name(), tempPwd, loginUrl);
     }
 
     private UserInfo buildUserForNewMember(final CreateMemberRequestDTO createMemberRequestDTO,
@@ -122,20 +133,5 @@ public class MemberService {
                 .mustChangePassword(true)
                 .memberId(savedMember.getId())
                 .build();
-    }
-
-    private static Member getUpdatedMember(
-            final UpdateMemberRequest updateMemberRequest,
-            final Member member,
-            final String name,
-            final String email,
-            final String phoneNumber
-    ) {
-        member.setName(name);
-        member.setEmail(email);
-        member.setPhoneNumber(phoneNumber);
-        member.setAge(updateMemberRequest.age());
-        member.setPlace(updateMemberRequest.place().trim().replaceAll("\\s+", " "));
-        return member;
     }
 }

@@ -2,13 +2,9 @@ package com.kitchensink.config;
 
 import com.kitchensink.core.user.service.UserInfoUserDetails;
 import com.kitchensink.core.user.service.UserInfoUserDetailsService;
-import com.kitchensink.filter.JwtAuthFilter;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -17,34 +13,25 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
-import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.net.URLEncoder;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
+import static java.util.stream.Collectors.toSet;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @AllArgsConstructor
 public class SecurityConfig {
-
-    @Autowired
-    @Qualifier("handlerExceptionResolver")
-    private HandlerExceptionResolver handlerExceptionResolver;
-
-    @Bean
-    public JwtAuthFilter jwtAuthFilter() {
-        return new JwtAuthFilter(handlerExceptionResolver);
-    }
 
     @Bean
     public UserDetailsService userDetailsService() {
@@ -72,7 +59,7 @@ public class SecurityConfig {
     // === Login success handler (must-reset -> redirect param -> role fallback) ===
     @Bean
     AuthenticationSuccessHandler loginSuccessHandler() {
-        var saved = new org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler();
+        var saved = new SavedRequestAwareAuthenticationSuccessHandler();
         saved.setTargetUrlParameter("redirect");
         saved.setAlwaysUseDefaultTargetUrl(false);
         var requestCache = new HttpSessionRequestCache();
@@ -85,8 +72,8 @@ public class SecurityConfig {
             }
 
             var roles = authentication.getAuthorities().stream()
-                    .map(org.springframework.security.core.GrantedAuthority::getAuthority)
-                    .collect(java.util.stream.Collectors.toSet());
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(toSet());
 
             // honor ?redirect=... (admin-only for /admin/**)
             String redirect = request.getParameter("redirect");
@@ -113,30 +100,10 @@ public class SecurityConfig {
         };
     }
 
-    // ===== API CHAIN (JWT, stateless) =====
-    @Bean
-    @Order(1)
-    public SecurityFilterChain apiChain(HttpSecurity http) throws Exception {
-        http
-                .securityMatcher("/api/**", "/auth/**")
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(sm -> sm.sessionCreationPolicy(STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class)
-        ;
-        return http.build();
-    }
-
     // ===== WEB CHAIN (form login, sessions) =====
     @Bean
-    @Order(2)
-    public SecurityFilterChain webChain(HttpSecurity http) throws Exception {
-        http // keep CSRF ON, but ignore it for exactly this bootstrap endpoint
-                .csrf(AbstractHttpConfigurer::disable)
-                // CSRF ON by default -> good for form posts
+    public SecurityFilterChain webChain(final HttpSecurity httpSecurity) throws Exception {
+        httpSecurity.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/reset-password",
                                 "/css/**", "/js/**", "/assets/**", "/default-ui.css").permitAll()
@@ -168,6 +135,6 @@ public class SecurityConfig {
                     String loc = "/login?reauth=1&redirect=" + URLEncoder.encode(full, UTF_8);
                     res.sendRedirect(loc);
                 }));
-        return http.build();
+        return httpSecurity.build();
     }
 }

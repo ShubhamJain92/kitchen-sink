@@ -24,6 +24,7 @@ public class SpringSecConfig {
 
         httpSecurity.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/authenticate", "/reset-password").permitAll()
                         .anyRequest().authenticated()
                 );
         return httpSecurity.formLogin(AbstractHttpConfigurer::disable).build();

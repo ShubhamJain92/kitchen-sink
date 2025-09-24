@@ -1,4 +1,4 @@
-package com.kitchensink.api.controller.admin;
+package com.kitchensink.api.view.controller.admin;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
@@ -8,13 +8,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Controller
 public class AdminGateController {
 
     private static String enc(String s) {
-        return URLEncoder.encode(s, StandardCharsets.UTF_8);
+        return URLEncoder.encode(s, UTF_8);
     }
 
     @GetMapping("/auth/admin-gate")
