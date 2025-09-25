@@ -20,15 +20,14 @@ public class AdminGateController {
 
     @GetMapping("/auth/admin-gate")
     public void adminGate(@RequestParam("go") String go,
-                          HttpServletResponse res,
+                          HttpServletResponse servletResponse,
                           Authentication auth) throws IOException {
 
-        // only allow app-internal targets
         String target = (go != null && go.startsWith("/")) ? go : "/admin/requests";
 
         if (auth == null || !auth.isAuthenticated()) {
             // not logged in → go login and come back
-            res.sendRedirect("/login?redirect=" + enc(target));
+            servletResponse.sendRedirect("/login?redirect=" + enc(target));
             return;
         }
 
@@ -36,10 +35,10 @@ public class AdminGateController {
                 .anyMatch(a -> "ADMIN".equals(a.getAuthority()) || "ROLE_ADMIN".equals(a.getAuthority()));
 
         if (isAdmin) {
-            res.sendRedirect(target);
+            servletResponse.sendRedirect(target);
         } else {
             // logged in but not admin → ask to sign in as admin (no forced logout)
-            res.sendRedirect("/login?reauth=1&redirect=" + enc(target));
+            servletResponse.sendRedirect("/login?reauth=1&redirect=" + enc(target));
         }
     }
 }

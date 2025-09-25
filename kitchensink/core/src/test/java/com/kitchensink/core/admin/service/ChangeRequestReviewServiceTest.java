@@ -30,14 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-/**
- * Unit tests for ChangeRequestReviewService.
- * <p>
- * Notes:
- * - For UPDATE flows we need a DTO with accessors: name(), phoneNumber(), age(), place(), email().
- * If your DTO is named differently, replace TestUpdateDTO with your class (e.g., MemberUpdateDTO).
- * - Two tests that touch userRepo on email change & delete require your actual UserInfo type.
- */
+
 @ExtendWith(MockitoExtension.class)
 class ChangeRequestReviewServiceTest {
 
@@ -75,19 +68,26 @@ class ChangeRequestReviewServiceTest {
                 .build();
     }
 
+    private static Member getMember(final String id, final String name, final String mail) {
+        return Member.builder()
+                .id(id)
+                .name(name)
+                .age(20)
+                .email(mail)
+                .build();
+    }
+
+    // ------------------------- approve: DELETE -------------------------
+
     @BeforeEach
     void setUp() {
         service = new ChangeRequestReviewService(changeReqRepo, memberRepo, userRepo, emailService);
     }
 
-    // ------------------------- approve: DELETE -------------------------
-
     @Test
     void approve_delete_sendsEmail_first_thenDeletes_andMarksApproved() {
         var req = newReq("r1", "m1", "a@x.com", ChangeType.DELETE, PENDING);
-        var member = new Member();
-        member.setId("m1");
-        member.setName("Alice");
+        var member = getMember("m1", "Alice", "d@x.com");
 
         when(changeReqRepo.findById("r1")).thenReturn(Optional.of(req));
         when(memberRepo.findById("m1")).thenReturn(Optional.of(member));
@@ -127,9 +127,7 @@ class ChangeRequestReviewServiceTest {
     @Test
     void approve_delete_emailFailure_isSwallowed_andFlowContinues() {
         var req = newReq("r3", "m3", "c@x.com", ChangeType.DELETE, PENDING);
-        var member = new Member();
-        member.setId("m3");
-        member.setName("Carl");
+        var member = getMember("m3", "Carl", "d@x.com");
 
         when(changeReqRepo.findById("r3")).thenReturn(Optional.of(req));
         when(memberRepo.findById("m3")).thenReturn(Optional.of(member));
@@ -154,9 +152,7 @@ class ChangeRequestReviewServiceTest {
         // we need req.getRequested() to return dto
         req.setRequested(dto);
 
-        var member = new Member();
-        member.setId("m4");
-        member.setEmail("old@x.com");
+        var member = getMember("m4", "Carl", "d@x.com");
 
         when(changeReqRepo.findById("r4")).thenReturn(Optional.of(req));
         when(memberRepo.findById("m4")).thenReturn(Optional.of(member));
@@ -184,9 +180,7 @@ class ChangeRequestReviewServiceTest {
         var dto = new MemberUpdateDTO(null, "abc@gmail.com", "9627713570", 30, "Pune");
         req.setRequested(dto);
 
-        var member = new Member();
-        member.setId("m5");
-        member.setEmail("d@x.com");
+        var member = getMember("m5", "name", "d@x.com");
         when(changeReqRepo.findById("r5")).thenReturn(Optional.of(req));
         when(memberRepo.findById("m5")).thenReturn(Optional.of(member));
 
@@ -202,9 +196,7 @@ class ChangeRequestReviewServiceTest {
         var dto = new MemberUpdateDTO(null, "abc@gmail.com", "9627713570", 30, "Pune");
         req.setRequested(dto);
 
-        var member = new Member();
-        member.setId("m6");
-        member.setEmail("old@x.com");
+        var member = getMember("m6", "name", "old@x.com");
 
         when(changeReqRepo.findById("r6")).thenReturn(Optional.of(req));
         when(memberRepo.findById("m6")).thenReturn(Optional.of(member));
@@ -253,9 +245,7 @@ class ChangeRequestReviewServiceTest {
     @Test
     void reject_pending_withReason_andName_marksRejected_sendsEmailWithName() {
         var req = newReq("r11", "m11", "h@x.com", ChangeType.DELETE, PENDING);
-        var member = new Member();
-        member.setId("m11");
-        member.setName("Helen");
+        var member = getMember("m11", "Helen", "d@x.com");
 
         when(changeReqRepo.findById("r11")).thenReturn(Optional.of(req));
         when(memberRepo.findById("m11")).thenReturn(Optional.of(member));
@@ -309,7 +299,7 @@ class ChangeRequestReviewServiceTest {
     void reject_emailFailure_isSwallowed_andMarksRejected() {
         var req = newReq("r14", "m14", "k@x.com", ChangeType.UPDATE, PENDING);
         when(changeReqRepo.findById("r14")).thenReturn(Optional.of(req));
-        when(memberRepo.findById("m14")).thenReturn(Optional.of(new Member()));
+        when(memberRepo.findById("m14")).thenReturn(Optional.of(Member.builder().age(20).build()));
 
         doThrow(new RuntimeException("smtp down"))
                 .when(emailService).notifyMemberRejected(anyString(), any(), any());

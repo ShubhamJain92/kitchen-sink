@@ -15,17 +15,13 @@
     </properties>
 
     <dependencies>
-        <!-- Choose one stack; the actual starter is in main for runtime -->
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
         </dependency>
-        <!-- For Mongo repositories -->
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-mongodb</artifactId>
         </dependency>
-        <!-- If JPA instead: spring-data-jpa -->
-        <!-- Mapping support (Lombok optional) -->
     </dependencies>
 </project>

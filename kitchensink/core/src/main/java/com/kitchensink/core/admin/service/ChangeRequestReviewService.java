@@ -10,17 +10,17 @@ import com.kitchensink.persistence.user.repo.UserInfoRepository;
 import com.mongodb.DuplicateKeyException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import static com.kitchensink.persistence.KitchenUtils.collapseWhitespace;
+import static com.kitchensink.persistence.KitchenUtils.normalizeEmail;
 import static com.kitchensink.persistence.common.dto.enums.ChangeType.DELETE;
 import static com.kitchensink.persistence.common.dto.enums.ChangeType.UPDATE;
 import static com.kitchensink.persistence.common.dto.enums.Status.*;
 import static java.time.Instant.now;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.*;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +51,7 @@ public class ChangeRequestReviewService {
     public void reject(final String requestId, final String reason) {
         final var existingChangeRequest = getExistingRequestOrThrow(requestId);
         if (existingChangeRequest.getStatus() != PENDING) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Request is not pending");
+            throw new ResponseStatusException(CONFLICT, "Request is not pending");
         }
         markReviewed(existingChangeRequest, REJECTED, reason);
         final var member = getMember(existingChangeRequest);
@@ -70,7 +70,7 @@ public class ChangeRequestReviewService {
     private MemberChangeRequest getPendingRequestOrThrow(final String id) {
         final var req = getExistingRequestOrThrow(id);
         if (req.getStatus() != PENDING) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Request is not pending");
+            throw new ResponseStatusException(CONFLICT, "Request is not pending");
         }
         return req;
     }
@@ -82,26 +82,35 @@ public class ChangeRequestReviewService {
         final var beforeEmail = member.getEmail(); // for diff/email hints
         final var dto = req.getRequested();
 
-        if (dto.name() != null) member.setName(dto.name());
-        if (dto.phoneNumber() != null) member.setPhoneNumber(dto.phoneNumber());
-        member.setAge(dto.age());
-        if (dto.place() != null) member.setPlace(dto.place());
+        var mb = member.toBuilder();
 
+        if (dto.name() != null) mb.name(dto.name());
+        if (dto.phoneNumber() != null) mb.phoneNumber(dto.phoneNumber());
+        mb.age(dto.age());
+        if (dto.place() != null) mb.place(collapseWhitespace(dto.place()));
+
+        String normalizedEmail = null;
         if (dto.email() != null) {
-            final var normalized = dto.email().trim().toLowerCase();
-            member.setEmail(normalized);
-
-            // keep login username in sync
-            final var userInfo = userRepo.findByUserName(req.getMemberEmail())
-                    .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User login not found"));
-            userInfo.setUserName(normalized);
-            userRepo.save(userInfo);
+            normalizedEmail = normalizeEmail(dto.email());
+            mb.email(normalizedEmail);
         }
 
+        final var updatedMember = mb.build();
+
         try {
-            memberRepo.save(member);
+            memberRepo.save(updatedMember);
         } catch (DuplicateKeyException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Unique constraint violation on member update");
+            throw new ResponseStatusException(CONFLICT, "Unique constraint violation on member update");
+        }
+
+        if (normalizedEmail != null && !normalizedEmail.equalsIgnoreCase(beforeEmail)) {
+            final var userInfo = userRepo.findByUserName(req.getMemberEmail())
+                    .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User login not found"));
+
+            final var updatedUser = userInfo.toBuilder()
+                    .userName(normalizedEmail)
+                    .build();
+            userRepo.save(updatedUser);
         }
 
         notify(() -> emailService.notifyMemberUpdateApproved(beforeEmail, req));
@@ -125,10 +134,12 @@ public class ChangeRequestReviewService {
     private void markReviewed(final MemberChangeRequest changeRequest,
                               final Status status,
                               final String reason) {
-        changeRequest.setStatus(status);
-        changeRequest.setRejectionReason(reason);
-        changeRequest.setReviewedAt(now());
-        changeRequestRepository.save(changeRequest);
+        final var updatedChangeRequest = changeRequest.toBuilder()
+                .status(status)
+                .rejectionReason(reason)
+                .reviewedAt(now())
+                .build();
+        changeRequestRepository.save(updatedChangeRequest);
     }
 
     /**

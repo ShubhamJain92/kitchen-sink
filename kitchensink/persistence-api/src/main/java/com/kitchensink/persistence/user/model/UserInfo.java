@@ -15,16 +15,16 @@ import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
 @Document(collection = "users")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @ToString(exclude = "password")
 public class UserInfo {
 
     @Id
-    private String id; // Mongo uses String/ObjectId; Spring maps it for you
+    private String id;
 
+    @With
     @NotBlank
     @Size(min = 1, max = 50)
     private String userName;
@@ -38,10 +38,16 @@ public class UserInfo {
     @Builder.Default
     private Set<String> roles = Set.of(Role.MEMBER.name());
 
-    // ➕ add this flag to force password reset on first login
+    // added this flag to force password reset on first login
     @Builder.Default
+    @With
     private boolean mustChangePassword = false;
 
+    @With
     @Indexed
     private String memberId;
+
+    public UserInfo withPasswordHash(final String hashed, final boolean mustChange) {
+        return this.toBuilder().password(hashed).mustChangePassword(mustChange).build();
+    }
 }

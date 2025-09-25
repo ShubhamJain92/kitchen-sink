@@ -6,10 +6,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 public class MemberFilterRequest {
     // paging
     @Builder.Default

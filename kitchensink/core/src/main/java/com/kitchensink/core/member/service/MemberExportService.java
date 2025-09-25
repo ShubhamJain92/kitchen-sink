@@ -128,7 +128,6 @@ public class MemberExportService {
     }
 
     private Query buildQueryForExport(final MemberFilterRequest filterRequest) {
-        // sort whitelist
         var allowed = of("name", "email", "phoneNumber", "age", "place", REGISTRATION_DATE);
         var sortFields = (filterRequest.getSortBy() == null || filterRequest.getSortBy().isEmpty() ? List.of(REGISTRATION_DATE) : filterRequest.getSortBy())
                 .stream().filter(allowed::contains).toList();

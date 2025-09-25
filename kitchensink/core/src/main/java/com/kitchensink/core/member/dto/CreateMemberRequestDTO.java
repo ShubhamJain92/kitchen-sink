@@ -4,6 +4,8 @@ import com.kitchensink.persistence.member.model.Member;
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 
+import java.time.Instant;
+
 import static java.time.LocalDate.now;
 
 @Builder
@@ -47,6 +49,8 @@ public record CreateMemberRequestDTO(
                 .age(createMemberRequestDTO.age)
                 .place(createMemberRequestDTO.place)
                 .registrationDate(now())
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .build();
     }
 }

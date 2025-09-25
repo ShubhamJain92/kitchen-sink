@@ -39,7 +39,7 @@ class MemberChangeAdminControllerTest {
 
     @Test
     @WithMockUser(authorities = "ADMIN")
-    void approve_asAdmin_returnsSeeOther_andCallsService() throws Exception {
+    void approve_asAdmin_returnsRedirectTo_andCallsService() throws Exception {
         mvc.perform(post("/admin/requests/{id}/approve", "abc123"))
                 .andExpect(status().isSeeOther())
                 .andExpect(header().string(HttpHeaders.LOCATION, "/admin/requests"));
@@ -59,7 +59,7 @@ class MemberChangeAdminControllerTest {
 
     @Test
     @WithMockUser(authorities = "ADMIN")
-    void reject_asAdmin_withReason_returnsSeeOther_andCallsService() throws Exception {
+    void reject_asAdmin_withReason_returnsRedirectTo_andCallsService() throws Exception {
         mvc.perform(post("/admin/requests/{id}/reject", "xyz789")
                         .param("reason", "Incomplete details"))
                 .andExpect(status().is(SEE_OTHER.value()))
@@ -70,7 +70,7 @@ class MemberChangeAdminControllerTest {
 
     @Test
     @WithMockUser(authorities = "ADMIN")
-    void reject_asAdmin_withoutReason_returnsSeeOther_andCallsServiceWithNullReason() throws Exception {
+    void reject_asAdmin_withoutReason_returnsRedirectTo_andCallsServiceWithNullReason() throws Exception {
         mvc.perform(post("/admin/requests/{id}/reject", "xyz789"))
                 .andExpect(status().isSeeOther())
                 .andExpect(header().string(HttpHeaders.LOCATION, "/admin/requests"));

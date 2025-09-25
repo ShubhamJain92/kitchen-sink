@@ -47,8 +47,7 @@ public class UserService {
 
     public void resetPassword(final String username, final String newPassword) {
         var user = userInfoRepository.findByUserName(username).orElseThrow();
-        user.setPassword(encoder.encode(newPassword));
-        user.setMustChangePassword(false);
-        userInfoRepository.save(user);
+        final var updatedUser = user.withPasswordHash(encoder.encode(newPassword), false);
+        userInfoRepository.save(updatedUser);
     }
 }

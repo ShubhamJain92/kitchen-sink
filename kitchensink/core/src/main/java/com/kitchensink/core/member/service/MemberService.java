@@ -22,6 +22,7 @@ import java.util.Set;
 import static com.kitchensink.core.member.dto.CreateMemberRequestDTO.to;
 import static com.kitchensink.core.utils.MemberUtils.generateTempPassword;
 import static com.kitchensink.core.utils.MemberUtils.toProperCase;
+import static com.kitchensink.persistence.KitchenUtils.collapseWhitespace;
 import static com.kitchensink.persistence.common.dto.enums.Role.MEMBER;
 import static java.util.Optional.ofNullable;
 
@@ -44,12 +45,13 @@ public class MemberService {
             final String email,
             final String phoneNumber
     ) {
-        member.setName(name);
-        member.setEmail(email);
-        member.setPhoneNumber(phoneNumber);
-        member.setAge(updateMemberRequest.age());
-        member.setPlace(updateMemberRequest.place().trim().replaceAll("\\s+", " "));
-        return member;
+        return member.toBuilder()
+                .name(name)
+                .email(email)
+                .phoneNumber(phoneNumber)
+                .age(updateMemberRequest.age())
+                .place(collapseWhitespace(updateMemberRequest.place()))
+                .build();
     }
 
     @Transactional

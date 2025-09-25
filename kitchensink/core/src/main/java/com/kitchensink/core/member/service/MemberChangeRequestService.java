@@ -29,14 +29,11 @@ public class MemberChangeRequestService {
     private final MemberChangeRequestRepository changeRequestRepository;
     private final SmtpEmailService emailService;
 
-    private static void updateMemberBefore(final MemberChangeRequest memberChangeRequest, final Member member) {
-        memberChangeRequest.setBefore(new MemberSnapshot(
-                member.getName(),
-                member.getEmail(),
-                member.getPhoneNumber(),
-                member.getAge(),
-                member.getPlace()
-        ));
+    private static MemberChangeRequest updateMemberBefore(final MemberChangeRequest memberChangeRequest,
+                                                          final Member member) {
+        return memberChangeRequest.toBuilder()
+                .before(MemberSnapshot.from(member))
+                .build();
     }
 
     private static MemberChangeRequest buildMemberChangeRequest(final String memberEmail,
@@ -61,8 +58,8 @@ public class MemberChangeRequestService {
         }
 
         final var memberChangeRequest = buildMemberChangeRequest(memberEmail, memberUpdateDTO, member);
-        updateMemberBefore(memberChangeRequest, member);
-        saveMemberChangeRequest(memberChangeRequest);
+        final var updatedChangeRequest = updateMemberBefore(memberChangeRequest, member);
+        saveMemberChangeRequest(updatedChangeRequest);
         try {
             emailService.notifyAdminUpdate(member, memberUpdateDTO);
         } catch (Exception e) {

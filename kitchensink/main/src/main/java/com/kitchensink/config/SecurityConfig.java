@@ -127,7 +127,7 @@ public class SecurityConfig {
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                         .clearAuthentication(true)
-                ) // Optional: when a logged-in non-admin hits /admin/**, send them to login to re-auth as admin
+                )
                 .exceptionHandling(e -> e.accessDeniedHandler((req, res, ex) -> {
                     String uri = req.getRequestURI();
                     String qs = req.getQueryString();

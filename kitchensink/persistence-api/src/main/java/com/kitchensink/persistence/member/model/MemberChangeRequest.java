@@ -15,8 +15,7 @@ import static com.kitchensink.persistence.common.dto.enums.Status.PENDING;
 
 @Document("member_change_requests")
 @Getter
-@Setter
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class MemberChangeRequest {

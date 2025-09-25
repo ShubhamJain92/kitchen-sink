@@ -1,6 +1,9 @@
 package com.kitchensink.persistence.member.model;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -11,12 +14,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.Instant;
 import java.time.LocalDate;
 
+import static lombok.AccessLevel.PROTECTED;
+
 @Document("member")
 @Getter
-@Setter
-@NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@NoArgsConstructor(access = PROTECTED)
+@Builder(toBuilder = true)
 public class Member {
 
     @Id
