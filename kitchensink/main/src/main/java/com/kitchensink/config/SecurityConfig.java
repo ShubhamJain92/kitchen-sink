@@ -2,6 +2,7 @@ package com.kitchensink.config;
 
 import com.kitchensink.core.user.service.UserInfoUserDetails;
 import com.kitchensink.core.user.service.UserInfoUserDetailsService;
+import com.kitchensink.persistence.common.dto.enums.Role;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -78,7 +79,7 @@ public class SecurityConfig {
             // honor ?redirect=... (admin-only for /admin/**)
             String redirect = request.getParameter("redirect");
             if (redirect != null && redirect.startsWith("/")
-                    && (!redirect.startsWith("/admin") || roles.contains("ADMIN"))) {
+                    && (!redirect.startsWith("/admin") || roles.contains(Role.ADMIN.name()))) {
                 saved.onAuthenticationSuccess(request, response, authentication);
                 return;
             }
@@ -90,7 +91,7 @@ public class SecurityConfig {
                 return;
             }
 
-            if (roles.contains("ADMIN")) {
+            if (roles.contains(Role.ADMIN.name())) {
                 response.sendRedirect("/index.html");
             } else if (roles.contains("MEMBER")) {
                 response.sendRedirect("/member/me");
@@ -105,14 +106,12 @@ public class SecurityConfig {
     public SecurityFilterChain webChain(final HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/reset-password",
+                        .requestMatchers("/login", "/auth/admin-gate",
                                 "/css/**", "/js/**", "/assets/**", "/default-ui.css").permitAll()
-                        .requestMatchers("/login").permitAll()
-                        .requestMatchers("/auth/admin-gate").permitAll()
                         .requestMatchers("/reset-password", "/reset-password/**").authenticated()
-                        .requestMatchers("/index.html").hasAuthority("ADMIN")
-                        .requestMatchers("/member/me/**").hasAuthority("MEMBER")
-                        .requestMatchers("/members", "/members/**", "/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/index.html").hasAuthority(Role.ADMIN.name())
+                        .requestMatchers("/member/me/**").hasAuthority(Role.MEMBER.name())
+                        .requestMatchers("/members", "/members/**", "/admin/**").hasAuthority(Role.ADMIN.name())
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
